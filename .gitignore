@@ -1,4 +1,9 @@
 .claude/
 node_modules/
 .env
+.env.*
 *.log
+dist/
+dist-ssr/
+*.local
+.DS_Store
