@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Elysian Studios</title>
+    <script>
+      // SPA redirect for GitHub Pages project sites.
+      // Rewrites /elysian-studios-website/route into a query string the
+      // app decodes in index.html, so deep links survive a hard refresh.
+      (function () {
+        var segmentCount = 1; // number of path segments in the repo base
+        var l = window.location;
+        l.replace(
+          l.protocol + '//' + l.host +
+          l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
+          l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+        );
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
