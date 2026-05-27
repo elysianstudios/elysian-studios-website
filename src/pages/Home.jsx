@@ -1,23 +1,18 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import PostCard from '../components/PostCard'
-import Cursor from '../components/Cursor'
 import posts from '../data/posts.json'
 import styles from '../styles/Home.module.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const UNSPLASH = 'https://images.unsplash.com/'
-const heroImages = [
-  UNSPLASH + 'photo-1553356084-58ef4a67b2a7?w=400&q=80',
-  UNSPLASH + 'photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-]
+const FALLBACK = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1400&q=80'
 
-const featured = posts[0]
-const carouselPosts = posts.slice(0, 8)
+const heroPosts    = posts.slice(0, 5)
+const carouselPosts = posts.slice(5, 13)
 const archivePosts  = posts.slice(1, 5)
 const thinkerPosts  = posts.slice(5, 9)
 
@@ -28,33 +23,31 @@ const QUOTES = [
 ]
 
 export default function Home() {
-  const heroRef    = useRef(null)
-  const carRef     = useRef(null)
-  const trackRef   = useRef(null)
-  const currentIdx = useRef(0)
-  const dragRef    = useRef({ active: false, startX: 0, startTr: 0, curTr: 0 })
-  const autoRef    = useRef(null)
+  // ── Hero Carousel state ────────────────────────────────────
+  const [activeIdx,      setActiveIdx]      = useState(0)
+  const [transitioning,  setTransitioning]  = useState(false)
+  const heroAutoRef  = useRef(null)
+  const heroRef      = useRef(null)
 
-  // ── GSAP Hero ──────────────────────────────────────────────
+  const goHero = (idx) => {
+    if (transitioning) return
+    setTransitioning(true)
+    setTimeout(() => {
+      setActiveIdx(idx)
+      setTransitioning(false)
+    }, 320)
+  }
+
+  const startHeroAuto = () => {
+    clearInterval(heroAutoRef.current)
+    heroAutoRef.current = setInterval(() => {
+      setActiveIdx(i => (i + 1) % heroPosts.length)
+    }, 6000)
+  }
+
   useEffect(() => {
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-    tl.fromTo('.hero-line', { y: 60, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.15, duration: 1 }, 0.2)
-      .fromTo('.hero-sub-text', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, 0.9)
-      .fromTo('.hero-actions-wrap', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, 1.1)
-      .fromTo('.hero-portrait-1', { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2 }, 0.5)
-      .fromTo('.hero-portrait-2', { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 1.2 }, 0.7)
-
-    // Hero parallax
-    gsap.to('.hero-portrait-1', {
-      y: 60,
-      ease: 'none',
-      scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
-    })
-    gsap.to('.hero-portrait-2', {
-      y: 40,
-      ease: 'none',
-      scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
-    })
+    startHeroAuto()
+    return () => clearInterval(heroAutoRef.current)
   }, [])
 
   // ── Scroll reveals ─────────────────────────────────────────
@@ -79,10 +72,30 @@ export default function Home() {
         }
       )
     })
+    // Parallax on ELYSIAN text — desktop only
+    if (window.innerWidth > 768) {
+      gsap.to('.quote-bg-text', {
+        y: -80,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.quote-section',
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true,
+        },
+      })
+    }
+
     return () => ScrollTrigger.getAll().forEach(t => t.kill())
   }, [])
 
-  // ── Carousel ───────────────────────────────────────────────
+  // ── Chronicles Carousel ────────────────────────────────────
+  const carRef     = useRef(null)
+  const trackRef   = useRef(null)
+  const currentIdx = useRef(0)
+  const dragRef    = useRef({ active: false, startX: 0, startTr: 0, curTr: 0 })
+  const autoRef    = useRef(null)
+
   const getVisible = () => {
     if (window.innerWidth < 768) return 1
     if (window.innerWidth < 1100) return 2
@@ -104,7 +117,6 @@ export default function Home() {
       trackRef.current.style.transition = 'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)'
       trackRef.current.style.transform = `translateX(-${i * getCardW()}px)`
     }
-    // update dots
     document.querySelectorAll('[data-dot]').forEach((d, di) => {
       d.classList.toggle(styles.dotActive, di === i)
     })
@@ -156,80 +168,133 @@ export default function Home() {
     startAuto()
   }
 
+  // ── Hero word-by-word entrance ────────────────────────────
+  useEffect(() => {
+    if (window.innerWidth <= 768) return
+    const words = document.querySelectorAll('.hero-word')
+    if (!words.length) return
+    gsap.fromTo(words,
+      { y: 18, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.045, duration: 0.5, ease: 'power2.out', delay: 0.35 }
+    )
+    gsap.fromTo('.hero-cat-label',
+      { y: 10, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', delay: 0.2 }
+    )
+    gsap.fromTo('.hero-excerpt-text',
+      { y: 10, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.45, ease: 'power2.out', delay: 0.65 }
+    )
+    gsap.fromTo('.hero-actions-block',
+      { y: 8, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', delay: 0.8 }
+    )
+  }, [activeIdx])
+
+  const activePost = heroPosts[activeIdx]
+
   return (
     <div className={styles.page}>
-      <Cursor />
 
-      {/* ── Hero ──────────────────────────────────────────────── */}
-      <section className={styles.hero} ref={heroRef} id="home">
+      {/* ── Immersive Hero Carousel ───────────────────────────── */}
+      <section
+        className={styles.heroCarousel}
+        ref={heroRef}
+        id="home"
+        onMouseEnter={() => clearInterval(heroAutoRef.current)}
+        onMouseLeave={startHeroAuto}
+      >
+        {/* Background layers — cross-fade */}
+        {heroPosts.map((post, i) => (
+          <div
+            key={post.id}
+            className={`${styles.heroBgSlide} ${i === activeIdx ? styles.heroBgActive : ''}`}
+          >
+            <img
+              src={post.image || FALLBACK}
+              alt=""
+              loading={i === 0 ? 'eager' : 'lazy'}
+              onError={e => { e.target.src = FALLBACK }}
+            />
+            <div className={styles.heroBgOverlay} />
+          </div>
+        ))}
+
         <div className="grain-overlay" />
-        <div className={styles.heroBg}>
-          <div className={styles.heroGlow1} />
-          <div className={styles.heroGlow2} />
-        </div>
 
-        <div className={styles.heroContent}>
-          <p className={`section-label hero-line`}>A Digital Sanctuary</p>
+        {/* Bottom-left info */}
+        <div className={`${styles.heroInfo} ${transitioning ? styles.heroInfoOut : ''}`}>
+          {activePost.categories?.[0] && (
+            <span className={`${styles.heroCategory} hero-cat-label`}>{activePost.categories[0]}</span>
+          )}
           <h1 className={styles.heroTitle}>
-            <span className={`hero-line ${styles.heroLine}`}>Elysian is the</span>
-            <span className={`hero-line ${styles.heroLineItalic}`}>echo of infinity,</span>
-            <span className={`hero-line ${styles.heroLine}`}>Where silence speaks</span>
-            <span className={`hero-line ${styles.heroLineGold}`}>in symphony.</span>
+            {activePost.title.split(' ').map((word, i) => (
+              <span key={i} className={`${styles.heroWord} hero-word`}>{word}{' '}</span>
+            ))}
           </h1>
-          <p className={`${styles.heroSub} hero-sub-text`}>
-            A space unfettered by time or place. Where stories breathe,<br />
-            and figures of history find their stage.
-          </p>
-          <div className={`${styles.heroActions} hero-actions-wrap`}>
-            <Link to="/archive" className="btn btn-primary">Begin Reading</Link>
-            <a href="#chronicles" className="btn btn-ghost"
-              onClick={e => { e.preventDefault(); document.getElementById('chronicles')?.scrollIntoView({ behavior: 'smooth' }) }}>
+          {activePost.excerpt && (
+            <p className={`${styles.heroExcerpt} hero-excerpt-text`}>
+              {activePost.excerpt.substring(0, 150)}…
+            </p>
+          )}
+          <div className={`${styles.heroActions} hero-actions-block`}>
+            <Link to={`/read/${activePost.slug}`} className={styles.heroCta}>
+              Read Chronicle <ArrowRight size={14} />
+            </Link>
+            <Link to="/archive" className={styles.heroCtaGhost}>
               Explore Archive
-            </a>
+            </Link>
           </div>
         </div>
 
-        <div className={styles.heroPortraits}>
-          <div className={`${styles.portrait} ${styles.portrait1} hero-portrait-1`}>
-            <img src={heroImages[0]} alt="Historical figure" />
-            <div className={styles.portraitCaption}>
-              <span className={styles.captionName}>Devī Mīrā Bai</span>
-              <span className={styles.captionEra}>1498 – 1547</span>
-            </div>
-          </div>
-          <div className={`${styles.portrait} ${styles.portrait2} hero-portrait-2`}>
-            <img src={heroImages[1]} alt="Historical figure" />
-            <div className={styles.portraitCaption}>
-              <span className={styles.captionName}>Rani Lakshmi Bai</span>
-              <span className={styles.captionEra}>1828 – 1858</span>
-            </div>
-          </div>
+        {/* Right-side preview stack */}
+        <div className={styles.heroStack}>
+          {heroPosts.map((post, i) => (
+            <button
+              key={post.id}
+              className={`${styles.stackCard} ${i === activeIdx ? styles.stackCardActive : ''}`}
+              onClick={() => goHero(i)}
+              aria-label={`View: ${post.title}`}
+            >
+              <div className={styles.stackBar} />
+              <img
+                src={post.image || FALLBACK}
+                alt={post.title}
+                className={styles.stackImg}
+                onError={e => { e.target.src = FALLBACK }}
+              />
+              <div className={styles.stackInfo}>
+                {post.categories?.[0] && (
+                  <span className={styles.stackCat}>{post.categories[0]}</span>
+                )}
+                <p className={styles.stackTitle}>{post.title.substring(0, 48)}</p>
+              </div>
+            </button>
+          ))}
         </div>
 
+        {/* Progress indicators */}
+        <div className={styles.heroIndicators}>
+          {heroPosts.map((_, i) => (
+            <button
+              key={i}
+              className={`${styles.heroDot} ${i === activeIdx ? styles.heroDotActive : ''}`}
+              onClick={() => goHero(i)}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Scroll hint */}
         <div className={styles.scrollIndicator}>
           <div className={styles.scrollLine} />
           <span>Scroll</span>
         </div>
-
-        <div className={styles.issueNo}>01</div>
       </section>
 
-      {/* ── Marquee ───────────────────────────────────────────── */}
-      <div className={styles.marqueeStrip}>
-        <div className={styles.marqueeTrack}>
-          {Array(4).fill(null).map((_, i) => (
-            <span key={i} className={styles.marqueeGroup}>
-              <span>Chronicles of the Eternal</span>
-              <span className={styles.marqueeDot}>✦</span>
-              <span>Voices Across Centuries</span>
-              <span className={styles.marqueeDot}>✦</span>
-              <span>The Art of Living Fully</span>
-              <span className={styles.marqueeDot}>✦</span>
-              <span>Portraits of Greatness</span>
-              <span className={styles.marqueeDot}>✦</span>
-            </span>
-          ))}
-        </div>
+      {/* ── Section Divider ───────────────────────────────────── */}
+      <div className={styles.sectionDivider} aria-hidden="true">
+        <span className={styles.dividerGlyph}>✦</span>
       </div>
 
       {/* ── Chronicles Carousel ───────────────────────────────── */}
@@ -291,41 +356,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Featured Essay ────────────────────────────────────── */}
-      {featured && (
-        <section className={styles.featured}>
-          <div className={`container ${styles.featuredInner}`}>
-            <div className={`${styles.featuredText} gsap-reveal`}>
-              <span className="section-label">Featured Chronicle</span>
-              <h2 className={styles.featuredTitle}>{featured.title}</h2>
-              <div className="divider" />
-              <blockquote className={styles.pullQuote}>
-                <span className={styles.quoteGlyph}>"</span>
-                {featured.excerpt?.substring(0, 200)}
-                <span className={styles.quoteGlyph}>"</span>
-              </blockquote>
-              <Link to={`/read/${featured.slug}`} className="btn btn-primary">
-                Read Chronicle <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className={`${styles.featuredVisual} gsap-reveal`}>
-              <div className={styles.featuredImgWrap}>
-                <img
-                  src={featured.image || `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80`}
-                  alt={featured.title}
-                  className={styles.featuredImg}
-                />
-                <div className={styles.featuredFrame} />
-              </div>
-              <div className={styles.featuredStat}>
-                <span className={styles.statNum}>{featured.readTime || 5}</span>
-                <span className={styles.statLabel}>Minutes Read</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ── Archive Preview ───────────────────────────────────── */}
       <section className={styles.archivePreview} id="archive-preview">
         <div className="container">
@@ -347,8 +377,8 @@ export default function Home() {
       </section>
 
       {/* ── Grand Quote ───────────────────────────────────────── */}
-      <section className={styles.quoteSection}>
-        <div className={styles.quoteBgText}>ELYSIAN</div>
+      <section className={`${styles.quoteSection} quote-section`}>
+        <div className={`${styles.quoteBgText} quote-bg-text`}>ELYSIAN</div>
         <blockquote className={`${styles.grandQuote} gsap-reveal`}>
           <p>"{QUOTES[0].text}"</p>
           <cite>— {QUOTES[0].author}</cite>
@@ -377,7 +407,10 @@ export default function Home() {
                   <span className={styles.thinkerCat}>{post.categories?.[0] || 'Elysian'}</span>
                 </div>
                 <div className={styles.thinkerHover}>
-                  <p>{post.excerpt?.substring(0, 120)}…</p>
+                  <p className={styles.thinkerHoverTitle}>{post.title.substring(0, 60)}</p>
+                  {post.categories?.[0] && (
+                    <span className={styles.thinkerHoverCat}>{post.categories[0]}</span>
+                  )}
                   <span className={styles.thinkerRead}>Read Chronicle →</span>
                 </div>
               </Link>

@@ -65,7 +65,9 @@ export default function Footer() {
               setTimeout(() => msg.remove(), 4000)
               e.target.reset()
             }}>
-              <input type="email" placeholder="Your email" required />
+              <div className={styles.inputWrap}>
+                <input type="email" placeholder="Your email" required />
+              </div>
               <button type="submit" className="btn btn-primary">→</button>
             </form>
           </div>

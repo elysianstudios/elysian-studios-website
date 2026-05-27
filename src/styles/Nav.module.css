@@ -89,6 +89,16 @@
 }
 .hamburger:hover { color: var(--gold); }
 
+/* ── Over dark hero (Home page, unscrolled only) ────────────── */
+.nav.overDark .logo { color: var(--ivory); }
+.nav.overDark .logo:hover { color: var(--gold); }
+.nav.overDark .logoE { color: var(--gold); }
+.nav.overDark .link { color: rgba(250, 248, 245, 0.82); }
+.nav.overDark .link:hover,
+.nav.overDark .link.active { color: var(--ivory); }
+.nav.overDark .link::after { background: rgba(250, 248, 245, 0.6); }
+.nav.overDark .hamburger { color: var(--ivory); }
+
 /* ── Mobile Menu ────────────────────────────────────────────── */
 .mobileMenu {
   position: fixed;

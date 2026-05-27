@@ -34,9 +34,11 @@ export default function Nav() {
     }
   }
 
+  const onDark = location.pathname === '/' && !scrolled
+
   return (
     <>
-      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}>
+      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''} ${onDark ? styles.overDark : ''}`}>
         <div className={styles.inner}>
           <Link to="/" className={styles.logo}>
             <span className={styles.logoE}>E</span>LYSIAN
