@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -23,11 +23,27 @@ const QUOTES = [
 ]
 
 export default function Home() {
+  const location = useLocation()
+
+  // ── Scroll-to-section on cross-page navigation ─────────────
+  useEffect(() => {
+    const section = location.state?.scrollTo
+    if (section) {
+      const attempt = () => {
+        const el = document.getElementById(section)
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }
+      setTimeout(attempt, 100)
+    }
+  }, [location.state])
+
   // ── Hero Carousel state ────────────────────────────────────
   const [activeIdx,      setActiveIdx]      = useState(0)
   const [transitioning,  setTransitioning]  = useState(false)
   const heroAutoRef  = useRef(null)
   const heroRef      = useRef(null)
+
+  const heroDragRef = useRef({ active: false, startX: 0 })
 
   const goHero = (idx) => {
     if (transitioning) return
@@ -49,6 +65,24 @@ export default function Home() {
     startHeroAuto()
     return () => clearInterval(heroAutoRef.current)
   }, [])
+
+  const onHeroDragStart = (e) => {
+    heroDragRef.current.active = true
+    heroDragRef.current.startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX
+    clearInterval(heroAutoRef.current)
+  }
+
+  const onHeroDragEnd = (e) => {
+    if (!heroDragRef.current.active) return
+    heroDragRef.current.active = false
+    const endX = e.type === 'touchend' ? e.changedTouches[0].clientX : e.clientX
+    const diff = heroDragRef.current.startX - endX
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goHero((activeIdx + 1) % heroPosts.length)
+      else goHero((activeIdx - 1 + heroPosts.length) % heroPosts.length)
+    }
+    startHeroAuto()
+  }
 
   // ── Scroll reveals ─────────────────────────────────────────
   useEffect(() => {
@@ -168,26 +202,26 @@ export default function Home() {
     startAuto()
   }
 
-  // ── Hero word-by-word entrance ────────────────────────────
+  // ── Hero word-by-word entrance (spring/bubbly easing) ───────
   useEffect(() => {
     if (window.innerWidth <= 768) return
     const words = document.querySelectorAll('.hero-word')
     if (!words.length) return
     gsap.fromTo(words,
-      { y: 18, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.045, duration: 0.5, ease: 'power2.out', delay: 0.35 }
+      { y: 28, opacity: 0, scale: 0.96 },
+      { y: 0, opacity: 1, scale: 1, stagger: 0.04, duration: 0.65, ease: 'back.out(1.7)', delay: 0.25 }
     )
     gsap.fromTo('.hero-cat-label',
-      { y: 10, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', delay: 0.2 }
+      { y: 12, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.5, ease: 'back.out(2)', delay: 0.1 }
     )
     gsap.fromTo('.hero-excerpt-text',
-      { y: 10, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.45, ease: 'power2.out', delay: 0.65 }
+      { y: 14, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.55, ease: 'back.out(1.4)', delay: 0.55 }
     )
     gsap.fromTo('.hero-actions-block',
-      { y: 8, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', delay: 0.8 }
+      { y: 12, opacity: 0, scale: 0.97 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(2)', delay: 0.72 }
     )
   }, [activeIdx])
 
@@ -203,6 +237,10 @@ export default function Home() {
         id="home"
         onMouseEnter={() => clearInterval(heroAutoRef.current)}
         onMouseLeave={startHeroAuto}
+        onMouseDown={onHeroDragStart}
+        onMouseUp={onHeroDragEnd}
+        onTouchStart={onHeroDragStart}
+        onTouchEnd={onHeroDragEnd}
       >
         {/* Background layers — cross-fade */}
         {heroPosts.map((post, i) => (
@@ -221,6 +259,7 @@ export default function Home() {
         ))}
 
         <div className="grain-overlay" />
+        <div className={styles.heroBlob} aria-hidden="true" />
 
         {/* Bottom-left info */}
         <div className={`${styles.heroInfo} ${transitioning ? styles.heroInfoOut : ''}`}>

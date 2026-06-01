@@ -1,36 +1,45 @@
+/* ── Nav wrapper — positions the pill ──────────────────────── */
 .nav {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: clamp(0.6rem, 1.2vw, 1rem);
+  left: clamp(0.75rem, 2.5vw, 1.75rem);
+  right: clamp(0.75rem, 2.5vw, 1.75rem);
   z-index: 1000;
-  padding: 1.5rem 0;
-  transition: background 0.4s var(--ease), padding 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  pointer-events: none;
 }
 
-.nav.scrolled {
-  background: rgba(250, 248, 245, 0.88);
-  backdrop-filter: blur(16px) saturate(1.5);
-  -webkit-backdrop-filter: blur(16px) saturate(1.5);
-  box-shadow: 0 1px 0 var(--bone), 0 4px 24px rgba(28,25,23,0.06);
-  padding: 1rem 0;
-}
-
+/* ── The pill itself ────────────────────────────────────────── */
 .inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 clamp(1.5rem, 5vw, 4rem);
+  padding: 0.55rem 0.6rem 0.55rem 1.5rem;
+  background: rgba(250, 248, 245, 0.96);
+  border: 1px solid var(--bone);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow 0.35s var(--ease), padding 0.35s var(--ease);
+  pointer-events: all;
+}
+
+.nav.scrolled .inner {
+  box-shadow: var(--shadow-lg);
+  padding: 0.45rem 0.5rem 0.45rem 1.4rem;
 }
 
 .logo {
   font-family: var(--serif);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 500;
   letter-spacing: 0.25em;
   color: var(--ink);
   text-decoration: none;
   transition: color var(--t-fast);
+  flex-shrink: 0;
 }
 .logo:hover { color: var(--gold); }
 
@@ -41,20 +50,21 @@
 .links {
   display: flex;
   align-items: center;
-  gap: 2.5rem;
+  gap: 2rem;
   list-style: none;
 }
 
 .link {
   font-family: var(--sans);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
   text-decoration: none;
   position: relative;
   transition: color var(--t-fast);
+  cursor: pointer;
 }
 .link::after {
   content: '';
@@ -72,12 +82,25 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
+/* Dark pill CTA — Ather style */
 .subscribeBtn {
   font-size: 0.72rem !important;
-  padding: 0.6rem 1.4rem !important;
+  padding: 0.58rem 1.3rem !important;
+  border-radius: var(--radius-full) !important;
+  background: var(--ink) !important;
+  color: var(--ivory) !important;
+  border: none !important;
+  letter-spacing: 0.08em !important;
+  transition: background 0.3s var(--ease-spring), transform 0.35s var(--ease-spring), box-shadow 0.3s var(--ease) !important;
+}
+.subscribeBtn:hover {
+  background: var(--ink-soft) !important;
+  transform: scale(1.04) !important;
+  box-shadow: 0 4px 16px rgba(28,25,23,0.25) !important;
 }
 
 .hamburger {
@@ -86,18 +109,9 @@
   justify-content: center;
   color: var(--ink);
   transition: color var(--t-fast);
+  cursor: pointer;
 }
 .hamburger:hover { color: var(--gold); }
-
-/* ── Over dark hero (Home page, unscrolled only) ────────────── */
-.nav.overDark .logo { color: var(--ivory); }
-.nav.overDark .logo:hover { color: var(--gold); }
-.nav.overDark .logoE { color: var(--gold); }
-.nav.overDark .link { color: rgba(250, 248, 245, 0.82); }
-.nav.overDark .link:hover,
-.nav.overDark .link.active { color: var(--ivory); }
-.nav.overDark .link::after { background: rgba(250, 248, 245, 0.6); }
-.nav.overDark .hamburger { color: var(--ivory); }
 
 /* ── Mobile Menu ────────────────────────────────────────────── */
 .mobileMenu {
@@ -126,6 +140,7 @@
   top: 1.75rem; right: 2rem;
   color: var(--ink-soft);
   transition: color var(--t-fast);
+  cursor: pointer;
 }
 .mobileClose:hover { color: var(--gold); }
 
@@ -143,6 +158,7 @@
   color: var(--ink);
   line-height: 1.3;
   text-decoration: none;
+  cursor: pointer;
   opacity: 0;
   transform: translateX(-20px);
   transition: opacity 0.4s var(--ease) calc(var(--i) * 0.07s),
@@ -181,7 +197,15 @@
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .links,
-  .subscribeBtn { display: none; }
+  .links { display: none; }
   .hamburger { display: flex; }
+  /* Keep subscribeBtn visible on mobile per Ather style — just shrink */
+  .subscribeBtn {
+    font-size: 0.65rem !important;
+    padding: 0.5rem 0.9rem !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .subscribeBtn { display: none; }
 }

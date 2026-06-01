@@ -1,19 +1,20 @@
-import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import styles from '../styles/Nav.module.css'
 
 const links = [
-  { label: 'Chronicles', href: '/#chronicles' },
+  { label: 'Chronicles', section: 'chronicles' },
   { label: 'Archive',    href: '/archive' },
-  { label: 'Thinkers',   href: '/#thinkers' },
+  { label: 'Thinkers',   section: 'thinkers' },
   { label: 'Team',       href: '/team' },
 ]
 
 export default function Nav() {
-  const [scrolled,    setScrolled]    = useState(false)
-  const [menuOpen,    setMenuOpen]    = useState(false)
+  const [scrolled,  setScrolled]  = useState(false)
+  const [menuOpen,  setMenuOpen]  = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -21,24 +22,20 @@ export default function Nav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close mobile menu on route change
   useEffect(() => { setMenuOpen(false) }, [location])
 
-  const handleHashLink = (e, href) => {
-    if (href.startsWith('/#')) {
-      if (location.pathname === '/') {
-        e.preventDefault()
-        const id = href.slice(2)
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-      }
+  const scrollToSection = (section, e) => {
+    if (e) e.preventDefault()
+    if (location.pathname === '/') {
+      document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/', { state: { scrollTo: section } })
     }
   }
 
-  const onDark = location.pathname === '/' && !scrolled
-
   return (
     <>
-      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''} ${onDark ? styles.overDark : ''}`}>
+      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}>
         <div className={styles.inner}>
           <Link to="/" className={styles.logo}>
             <span className={styles.logoE}>E</span>LYSIAN
@@ -47,12 +44,19 @@ export default function Nav() {
           <ul className={styles.links}>
             {links.map(l => (
               <li key={l.label}>
-                {l.href.startsWith('/#') ? (
-                  <a href={l.href} onClick={e => handleHashLink(e, l.href)} className={styles.link}>
+                {l.section ? (
+                  <a
+                    href={`/#${l.section}`}
+                    onClick={e => scrollToSection(l.section, e)}
+                    className={styles.link}
+                  >
                     {l.label}
                   </a>
                 ) : (
-                  <Link to={l.href} className={`${styles.link} ${location.pathname === l.href ? styles.active : ''}`}>
+                  <Link
+                    to={l.href}
+                    className={`${styles.link} ${location.pathname === l.href ? styles.active : ''}`}
+                  >
                     {l.label}
                   </Link>
                 )}
@@ -83,13 +87,13 @@ export default function Nav() {
         </button>
         <nav className={styles.mobileLinks}>
           {links.map((l, i) => (
-            l.href.startsWith('/#') ? (
+            l.section ? (
               <a
                 key={l.label}
-                href={l.href}
+                href={`/#${l.section}`}
                 className={styles.mobileLink}
                 style={{ '--i': i }}
-                onClick={e => { handleHashLink(e, l.href); setMenuOpen(false) }}
+                onClick={e => { scrollToSection(l.section, e); setMenuOpen(false) }}
               >
                 {l.label}
               </a>
