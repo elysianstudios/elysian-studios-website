@@ -24,6 +24,8 @@ export default function Nav() {
 
   useEffect(() => { setMenuOpen(false) }, [location])
 
+  const onDark = location.pathname === '/' && !scrolled
+
   const scrollToSection = (section, e) => {
     if (e) e.preventDefault()
     if (location.pathname === '/') {
@@ -35,7 +37,7 @@ export default function Nav() {
 
   return (
     <>
-      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}>
+      <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''} ${onDark ? styles.onDark : ''}`}>
         <div className={styles.inner}>
           <Link to="/" className={styles.logo}>
             <span className={styles.logoE}>E</span>LYSIAN

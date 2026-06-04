@@ -16,12 +16,6 @@ const carouselPosts = posts.slice(5, 13)
 const archivePosts  = posts.slice(1, 5)
 const thinkerPosts  = posts.slice(5, 9)
 
-const QUOTES = [
-  { text: 'The measure of intelligence is the ability to change.', author: 'Albert Einstein' },
-  { text: 'In every walk with nature, one receives far more than he seeks.', author: 'John Muir' },
-  { text: 'The present is theirs; the future, for which I really worked, is mine.', author: 'Nikola Tesla' },
-]
-
 export default function Home() {
   const location = useLocation()
 
@@ -415,15 +409,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Grand Quote ───────────────────────────────────────── */}
-      <section className={`${styles.quoteSection} quote-section`}>
-        <div className={`${styles.quoteBgText} quote-bg-text`}>ELYSIAN</div>
-        <blockquote className={`${styles.grandQuote} gsap-reveal`}>
-          <p>"{QUOTES[0].text}"</p>
-          <cite>— {QUOTES[0].author}</cite>
-        </blockquote>
-      </section>
-
       {/* ── Thinkers Spotlight ────────────────────────────────── */}
       <section className={styles.thinkers} id="thinkers">
         <div className="container">
@@ -479,7 +464,6 @@ export default function Home() {
             <input type="email" placeholder="Your email address" required className={styles.emailInput} />
             <button type="submit" className="btn btn-primary">Subscribe</button>
           </form>
-          <p className={`${styles.newsletterNote} gsap-reveal`}>No algorithms. No clutter. Only the eternal.</p>
         </div>
       </section>
     </div>

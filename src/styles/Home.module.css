@@ -498,6 +498,7 @@
 .thinkers {
   padding: var(--section-padding) 0;
   background: var(--ivory-warm);
+  border-top: 1px solid var(--bone);
 }
 
 .thinkersGrid {

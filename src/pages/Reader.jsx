@@ -110,7 +110,6 @@ export default function Reader() {
             <span className={`tag ${styles.catTag}`}>{post.categories[0]}</span>
           )}
           <h1 className={styles.title}>{post.title}</h1>
-          <p className={styles.excerpt}>{post.excerpt?.substring(0, 200)}</p>
           <div className={styles.meta}>
             <span className={styles.metaItem}>
               <Clock size={13} /> {post.readTime || 5} min read

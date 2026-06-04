@@ -1,39 +1,44 @@
-/* ── Nav wrapper — positions the pill ──────────────────────── */
+/* ── Nav wrapper ────────────────────────────────────────────── */
 .nav {
   position: fixed;
-  top: clamp(0.6rem, 1.2vw, 1rem);
-  left: clamp(0.75rem, 2.5vw, 1.75rem);
-  right: clamp(0.75rem, 2.5vw, 1.75rem);
+  top: 0; left: 0; right: 0;
   z-index: 1000;
-  pointer-events: none;
+  padding: 1.5rem 0;
+  transition: padding 0.4s var(--ease);
 }
 
-/* ── The pill itself ────────────────────────────────────────── */
+/* Scrolled: frosted pill */
+.nav.scrolled {
+  padding: 0.6rem clamp(0.75rem, 2.5vw, 1.75rem);
+}
+
+.nav.scrolled .inner {
+  background: rgba(250, 248, 245, 0.92);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--bone);
+  border-radius: var(--radius-full);
+  padding: 0.5rem 0.6rem 0.5rem 1.5rem;
+}
+
 .inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0.55rem 0.6rem 0.55rem 1.5rem;
-  background: rgba(250, 248, 245, 0.96);
-  border: 1px solid var(--bone);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: box-shadow 0.35s var(--ease), padding 0.35s var(--ease);
-  pointer-events: all;
+  padding: 0 clamp(1.5rem, 5vw, 4rem);
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease),
+              border-radius 0.4s var(--ease), padding 0.4s var(--ease),
+              border-color 0.4s var(--ease);
+  border: 1px solid transparent;
 }
 
-.nav.scrolled .inner {
-  box-shadow: var(--shadow-lg);
-  padding: 0.45rem 0.5rem 0.45rem 1.4rem;
-}
-
+/* ── Logo ───────────────────────────────────────────────────── */
 .logo {
   font-family: var(--serif);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 500;
   letter-spacing: 0.25em;
   color: var(--ink);
@@ -43,22 +48,26 @@
 }
 .logo:hover { color: var(--gold); }
 
-.logoE {
-  color: var(--gold);
-}
+.logoE { color: var(--gold); }
 
+/* Over dark hero (home page only, unscrolled) — white text */
+.nav.onDark .logo { color: var(--ivory); }
+.nav.onDark .logo:hover { color: var(--gold); }
+.nav.onDark .logoE { color: var(--gold); }
+
+/* ── Links ──────────────────────────────────────────────────── */
 .links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.5rem;
   list-style: none;
 }
 
 .link {
   font-family: var(--sans);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-soft);
   text-decoration: none;
@@ -79,28 +88,24 @@
 .link:hover::after,
 .link.active::after { width: 100%; }
 
+/* Over dark hero — white links */
+.nav.onDark .link { color: rgba(250, 248, 245, 0.82); }
+.nav.onDark .link:hover,
+.nav.onDark .link.active { color: var(--ivory); }
+.nav.onDark .link::after { background: rgba(250, 248, 245, 0.6); }
+
+/* ── Actions ────────────────────────────────────────────────── */
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-shrink: 0;
 }
 
-/* Dark pill CTA — Ather style */
 .subscribeBtn {
   font-size: 0.72rem !important;
   padding: 0.58rem 1.3rem !important;
   border-radius: var(--radius-full) !important;
-  background: var(--ink) !important;
-  color: var(--ivory) !important;
-  border: none !important;
-  letter-spacing: 0.08em !important;
-  transition: background 0.3s var(--ease-spring), transform 0.35s var(--ease-spring), box-shadow 0.3s var(--ease) !important;
-}
-.subscribeBtn:hover {
-  background: var(--ink-soft) !important;
-  transform: scale(1.04) !important;
-  box-shadow: 0 4px 16px rgba(28,25,23,0.25) !important;
 }
 
 .hamburger {
@@ -112,6 +117,7 @@
   cursor: pointer;
 }
 .hamburger:hover { color: var(--gold); }
+.nav.onDark .hamburger { color: var(--ivory); }
 
 /* ── Mobile Menu ────────────────────────────────────────────── */
 .mobileMenu {
@@ -197,15 +203,7 @@
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .links { display: none; }
-  .hamburger { display: flex; }
-  /* Keep subscribeBtn visible on mobile per Ather style — just shrink */
-  .subscribeBtn {
-    font-size: 0.65rem !important;
-    padding: 0.5rem 0.9rem !important;
-  }
-}
-
-@media (max-width: 400px) {
+  .links,
   .subscribeBtn { display: none; }
+  .hamburger { display: flex; }
 }

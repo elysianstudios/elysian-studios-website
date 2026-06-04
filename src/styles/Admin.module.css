@@ -377,7 +377,247 @@
 }
 .dangerBtn:hover { background: #b91c1c; border-color: #b91c1c; transform: none; }
 
+/* ── Stats bar ──────────────────────────────────────────────── */
+.statsBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--ivory-warm);
+  border: 1px solid var(--bone);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+.statCard svg { color: var(--gold); flex-shrink: 0; }
+.statCard > div { display: flex; flex-direction: column; }
+.statNum {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  color: var(--ink);
+  line-height: 1;
+}
+.statLabel {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-top: 0.2rem;
+}
+
+/* ── Sort buttons ───────────────────────────────────────────── */
+.sortBtns {
+  display: flex;
+  gap: 0.3rem;
+}
+.sortBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--bone-dark);
+  border-radius: var(--radius-full);
+  color: var(--ink-muted);
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+  cursor: pointer;
+}
+.sortActive {
+  background: var(--ink);
+  color: var(--ivory);
+  border-color: var(--ink);
+}
+
+/* ── Row thumb ──────────────────────────────────────────────── */
+.rowThumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+}
+.rowSlug {
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: var(--ink-dim);
+}
+
+/* ── Tabs ───────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--bone);
+  margin-bottom: 1.75rem;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 0.65rem 1.1rem;
+  color: var(--ink-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--t-fast), border-color var(--t-fast);
+  cursor: pointer;
+}
+.tab:hover { color: var(--ink); }
+.tabActive {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
+}
+
+/* ── Editor panel ───────────────────────────────────────────── */
+.editorPanel { display: flex; flex-direction: column; }
+
+.titleInput {
+  font-family: var(--serif) !important;
+  font-size: 1.35rem !important;
+  font-weight: 400 !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.labelHint {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-dim);
+  font-size: 0.7rem;
+}
+
+/* Rich editor toolbar */
+.editorToolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--ivory-warm);
+  border: 1px solid var(--bone-dark);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: 0.4rem 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+.toolbarGroup { display: flex; gap: 0.1rem; }
+.toolbarDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--bone-dark);
+  margin: 0 0.2rem;
+  align-self: center;
+}
+.toolBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border-radius: 4px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.toolBtn:hover { background: var(--ivory-deep); color: var(--ink); }
+
+.contentArea {
+  font-family: 'Courier New', monospace !important;
+  font-size: 0.8rem !important;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  border-top: 1px solid var(--bone-dark) !important;
+}
+
+/* ── Meta panel ─────────────────────────────────────────────── */
+.metaPanel { padding: 0.25rem 0; }
+
+.imgPreview {
+  margin-top: 0.75rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-height: 200px;
+  border: 1px solid var(--bone);
+}
+.imgPreview img { width: 100%; height: 200px; object-fit: cover; display: block; }
+
+.tagPreview {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* ── Preview panel ──────────────────────────────────────────── */
+.previewPanel {
+  background: var(--ivory);
+  border: 1px solid var(--bone);
+  border-radius: var(--radius-md);
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.previewHeader { margin-bottom: 2rem; }
+.previewTitle {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.15;
+  margin: 0.75rem 0 1rem;
+}
+.previewMeta {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  flex-wrap: wrap;
+}
+.previewMeta span { display: flex; align-items: center; gap: 0.3rem; }
+.previewImg {
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-top: 1.25rem;
+  display: block;
+}
+.previewBody {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--ink-soft);
+}
+.previewBody p { margin-bottom: 1.25rem; }
+.previewBody h2 { font-size: 1.5rem; margin: 2rem 0 0.75rem; color: var(--ink); }
+.previewBody h3 { font-size: 1.2rem; margin: 1.5rem 0 0.5rem; color: var(--ink); }
+.previewBody blockquote { border-left: 2px solid var(--gold); padding-left: 1rem; margin: 1.5rem 0; font-style: italic; }
+.previewBody ul { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+.previewBody li { margin-bottom: 0.4rem; }
+
+/* ── Form header actions ────────────────────────────────────── */
+.formHeaderActions { display: flex; align-items: center; gap: 0.75rem; }
+
+@media (max-width: 900px) {
+  .statsBar { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 600px) {
   .formGrid { grid-template-columns: 1fr; }
   .tokenRow { flex-direction: column; }
+  .statsBar { grid-template-columns: 1fr 1fr; }
+  .tabs { overflow-x: auto; }
 }
