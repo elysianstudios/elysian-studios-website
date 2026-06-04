@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import DOMPurify from 'dompurify'
-import { Sun, BookOpen, Moon, Share2, Copy, ArrowLeft, ArrowRight, Clock, Calendar } from 'lucide-react'
+import { Sun, BookOpen, Moon, Share2, Copy, ArrowLeft, ArrowRight, Clock, Calendar, Minus, Plus, Type } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import posts from '../data/posts.json'
 import { parseContent } from '../utils/parseContent'
@@ -25,9 +25,19 @@ export default function Reader() {
   const { slug } = useParams()
   const navigate  = useNavigate()
   const [mode, setMode] = useState(() => localStorage.getItem('elysian-reader-mode') || 'light')
+  const [fontScale, setFontScale] = useState(() => parseFloat(localStorage.getItem('elysian-reader-font')) || 1)
   const [progress, setProgress] = useState(0)
   const [copied, setCopied]   = useState(false)
   const articleRef = useRef(null)
+
+  const FONT_MIN = 0.85, FONT_MAX = 1.4, FONT_STEP = 0.075
+  const adjustFont = (dir) => {
+    setFontScale(s => {
+      const next = Math.min(FONT_MAX, Math.max(FONT_MIN, +(s + dir * FONT_STEP).toFixed(3)))
+      localStorage.setItem('elysian-reader-font', next)
+      return next
+    })
+  }
 
   const post  = posts.find(p => p.slug === slug)
   const idx   = posts.findIndex(p => p.slug === slug)
@@ -84,26 +94,51 @@ export default function Reader() {
         <Link to="/archive" className={styles.backBtn}>
           <ArrowLeft size={16} /> Archive
         </Link>
-        <div className={styles.modeToggle}>
-          {MODES.map(({ key, icon: Icon, label }) => (
+        <div className={styles.controlGroup}>
+          {/* Font size */}
+          <div className={styles.fontControl} title="Text size">
             <button
-              key={key}
-              className={`${styles.modeBtn} ${mode === key ? styles.modeBtnActive : ''}`}
-              onClick={() => setMode(key)}
-              aria-label={`${label} mode`}
-              title={label}
+              className={styles.fontBtn}
+              onClick={() => adjustFont(-1)}
+              disabled={fontScale <= FONT_MIN}
+              aria-label="Decrease text size"
             >
-              <Icon size={15} />
+              <Minus size={14} />
             </button>
-          ))}
+            <Type size={15} className={styles.fontIcon} />
+            <button
+              className={styles.fontBtn}
+              onClick={() => adjustFont(1)}
+              disabled={fontScale >= FONT_MAX}
+              aria-label="Increase text size"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+
+          {/* Theme */}
+          <div className={styles.modeToggle}>
+            {MODES.map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                className={`${styles.modeBtn} ${mode === key ? styles.modeBtnActive : ''}`}
+                onClick={() => setMode(key)}
+                aria-label={`${label} mode`}
+                title={label}
+              >
+                <Icon size={15} />
+              </button>
+            ))}
+          </div>
+
+          <button className={styles.shareBtn} onClick={share} aria-label="Copy link">
+            {copied ? <><Copy size={14} /> Copied!</> : <><Share2 size={14} /> Share</>}
+          </button>
         </div>
-        <button className={styles.shareBtn} onClick={share} aria-label="Copy link">
-          {copied ? <><Copy size={14} /> Copied!</> : <><Share2 size={14} /> Share</>}
-        </button>
       </div>
 
       {/* Article */}
-      <article className={styles.article} ref={articleRef}>
+      <article className={styles.article} ref={articleRef} style={{ '--font-scale': fontScale }}>
         {/* Header */}
         <header className={styles.header}>
           {post.categories?.[0] && (

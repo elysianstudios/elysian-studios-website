@@ -84,6 +84,16 @@
 }
 .logoutBtn:hover { color: var(--ink); border-color: var(--ink); }
 
+.headerActions { display: flex; gap: 0.6rem; align-items: center; }
+
+.syncBadge, .syncBadgeOff {
+  margin-left: 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+.syncBadge { color: #16a34a; }
+.syncBadgeOff { color: var(--ink-dim); }
+
 /* ── Token section ──────────────────────────────────────────── */
 .tokenSection {
   background: var(--ivory-warm);

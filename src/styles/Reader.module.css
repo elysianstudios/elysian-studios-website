@@ -30,7 +30,7 @@
 .dark .title { color: #f0ece5; }
 .dark .header { border-color: rgba(255,255,255,0.08); }
 .dark .catTag { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.25); }
-.dark .controls { background: rgba(20,18,16,0.9); border-color: rgba(255,255,255,0.06); }
+.dark .controls { background: transparent; }
 .dark .backBtn { color: #b8b3ab; }
 .dark .backBtn:hover { color: var(--gold); }
 .dark .modeBtn { border-color: rgba(255,255,255,0.1); color: #b8b3ab; }
@@ -63,19 +63,16 @@
   transition: transform 0.1s linear;
 }
 
-/* ── Controls bar ───────────────────────────────────────────── */
+/* ── Controls bar (static — scrolls with content) ───────────── */
 .controls {
-  position: sticky;
-  top: 68px;
-  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem clamp(1.5rem, 5vw, 4rem);
-  background: rgba(250,248,245,0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--bone);
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 1.5rem clamp(1.5rem, 5vw, 2rem) 0;
 }
 
 .backBtn {
@@ -91,6 +88,39 @@
   transition: color var(--t-fast);
 }
 .backBtn:hover { color: var(--gold); }
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.fontControl {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--bone-dark);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.4rem;
+}
+.fontIcon { color: var(--ink-muted); }
+.fontBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  color: var(--ink-muted);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.fontBtn:hover:not(:disabled) { background: var(--ivory-deep); color: var(--ink); }
+.fontBtn:disabled { opacity: 0.35; cursor: default; }
+
+.dark .fontControl { border-color: rgba(255,255,255,0.1); }
+.dark .fontIcon, .dark .fontBtn { color: #b8b3ab; }
+.dark .fontBtn:hover:not(:disabled) { background: rgba(255,255,255,0.06); color: #f0ece5; }
 
 .modeToggle {
   display: flex;
@@ -199,10 +229,14 @@
 }
 
 /* Body typography */
-.body { font-family: var(--serif); }
+.body {
+  font-family: var(--serif);
+  font-size: calc(1.125rem * var(--font-scale, 1));
+}
 
-.body :global(p) {
-  font-size: 1.125rem;
+.body :global(p),
+.body :global(li) {
+  font-size: 1em;
   line-height: 1.85;
   color: var(--ink-soft);
   margin-bottom: 1.5em;

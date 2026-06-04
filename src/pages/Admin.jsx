@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock } from 'lucide-react'
 import { fetchPostsFile, writePostsFile, slugify } from '../utils/githubApi'
 import { parseContent } from '../utils/parseContent'
+import localPosts from '../data/posts.json'
 import DOMPurify from 'dompurify'
 import styles from '../styles/Admin.module.css'
 
@@ -59,10 +60,12 @@ export default function Admin() {
 
   const [posts,     setPosts]     = useState([])
   const [sha,       setSha]       = useState('')
+  const [ghLoaded,  setGhLoaded]  = useState(false) // true once posts+sha pulled from GitHub
   const [loading,   setLoading]   = useState(false)
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
   const [success,   setSuccess]   = useState('')
+  const [showTokenPanel, setShowTokenPanel] = useState(false)
 
   const [view,      setView]      = useState('list')
   const [editPost,  setEditPost]  = useState(null)
@@ -76,6 +79,13 @@ export default function Admin() {
   const [sortBy,    setSortBy]    = useState('date') // 'date' | 'title'
 
   const contentRef = useRef(null)
+
+  /* ── Seed local posts on login (browse/create without a token) ── */
+  useEffect(() => {
+    if (authed && posts.length === 0 && !ghLoaded) {
+      setPosts(localPosts)
+    }
+  }, [authed])
 
   /* ── Auth ──────────────────────────────────────────────────── */
   const login = async (e) => {
@@ -107,7 +117,11 @@ export default function Admin() {
       const { posts: p, sha: s } = await fetchPostsFile(token)
       setPosts(p)
       setSha(s)
+      setGhLoaded(true)
+      setShowTokenPanel(false)
       sessionStorage.setItem('elysian-gh-token', token)
+      setSuccess('Synced with GitHub — live data loaded.')
+      setTimeout(() => setSuccess(''), 4000)
     } catch (e) {
       setError('Could not fetch posts: ' + e.message)
     } finally {
@@ -116,7 +130,11 @@ export default function Admin() {
   }
 
   const savePosts = async (newPosts, msg) => {
-    if (!token || !sha) { setError('No GitHub token or SHA — load posts first.'); return false }
+    if (!token || !sha || !ghLoaded) {
+      setError('To publish, connect GitHub first: open "Sync with GitHub", paste your token, and Load Posts.')
+      setShowTokenPanel(true)
+      return false
+    }
     setSaving(true)
     setError('')
     try {
@@ -273,9 +291,19 @@ export default function Admin() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.pageTitle}>Admin Portal</h1>
-          <p className={styles.pageSubtitle}>Elysian Studios — Chronicle Manager</p>
+          <p className={styles.pageSubtitle}>
+            Elysian Studios — Chronicle Manager
+            {ghLoaded
+              ? <span className={styles.syncBadge}>● GitHub connected</span>
+              : <span className={styles.syncBadgeOff}>● Local preview</span>}
+          </p>
         </div>
-        <button className={styles.logoutBtn} onClick={logout}><LogOut size={15} /> Logout</button>
+        <div className={styles.headerActions}>
+          <button className={styles.logoutBtn} onClick={() => setShowTokenPanel(v => !v)}>
+            {ghLoaded ? 'Re-sync' : 'Sync with GitHub'}
+          </button>
+          <button className={styles.logoutBtn} onClick={logout}><LogOut size={15} /> Logout</button>
+        </div>
       </div>
 
       {/* Stats bar */}
@@ -300,8 +328,8 @@ export default function Admin() {
         </div>
       )}
 
-      {/* GitHub token */}
-      {!posts.length && (
+      {/* GitHub token panel (toggle) */}
+      {showTokenPanel && (
         <div className={styles.tokenSection}>
           <p className={styles.tokenLabel}>GitHub Personal Access Token (contents:write scope)</p>
           <div className={styles.tokenRow}>
@@ -321,7 +349,10 @@ export default function Admin() {
               {loading ? 'Loading…' : 'Load Posts'}
             </button>
           </div>
-          <p className={styles.tokenHint}>Token stored in sessionStorage only — cleared when you close the tab.</p>
+          <p className={styles.tokenHint}>
+            You're viewing the bundled local posts. Connecting GitHub loads the live data and lets you publish changes.
+            Token stored in sessionStorage only — cleared when you close the tab.
+          </p>
         </div>
       )}
 

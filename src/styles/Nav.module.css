@@ -7,9 +7,24 @@
   transition: padding 0.4s var(--ease);
 }
 
-/* Scrolled: frosted pill */
+/* Scrolled: frosted pill + blurred backdrop band above it */
 .nav.scrolled {
   padding: 0.6rem clamp(0.75rem, 2.5vw, 1.75rem);
+}
+
+.nav.scrolled::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  bottom: auto;
+  height: calc(100% + 0.6rem);
+  background: linear-gradient(to bottom, var(--ivory) 35%, rgba(250, 248, 245, 0));
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .nav.scrolled .inner {
