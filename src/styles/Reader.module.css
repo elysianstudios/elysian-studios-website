@@ -65,6 +65,8 @@
 
 /* ── Controls bar (static — scrolls with content) ───────────── */
 .controls {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -72,7 +74,8 @@
   flex-wrap: wrap;
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 1.5rem clamp(1.5rem, 5vw, 2rem) 0;
+  /* clear the fixed floating nav pill */
+  padding: calc(72px + clamp(1rem, 3vw, 2rem)) clamp(1.5rem, 5vw, 2rem) 0;
 }
 
 .backBtn {
@@ -168,7 +171,7 @@
 .article {
   max-width: 720px;
   margin: 0 auto;
-  padding: 4rem clamp(1.5rem, 5vw, 2.5rem);
+  padding: 2.5rem clamp(1.5rem, 5vw, 2.5rem) 4rem;
 }
 
 /* Header */
