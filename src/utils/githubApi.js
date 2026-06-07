@@ -18,6 +18,18 @@ function headers(token) {
   }
 }
 
+// base64 (Latin-1 bytes) → UTF-8 string. Mirror of the write encoder
+// `btoa(unescape(encodeURIComponent(s)))`. Using bare atob() here would
+// mis-decode multibyte chars (— … ' etc.) into mojibake.
+function decodeBase64Utf8(b64) {
+  return decodeURIComponent(escape(atob(b64)))
+}
+
+// UTF-8 string → base64 (Latin-1 bytes) for the GitHub contents API.
+function encodeBase64Utf8(str) {
+  return btoa(unescape(encodeURIComponent(str)))
+}
+
 export async function fetchPostsFile(token) {
   const res = await fetch(
     `${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
@@ -25,12 +37,12 @@ export async function fetchPostsFile(token) {
   )
   if (!res.ok) throw new Error(`GitHub API error: ${res.status} ${res.statusText}`)
   const data = await res.json()
-  const content = JSON.parse(atob(data.content.replace(/\n/g, '')))
+  const content = JSON.parse(decodeBase64Utf8(data.content.replace(/\n/g, '')))
   return { posts: content, sha: data.sha }
 }
 
 export async function writePostsFile(token, posts, sha, message) {
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(posts, null, 2))))
+  const encoded = encodeBase64Utf8(JSON.stringify(posts, null, 2))
   const res = await fetch(
     `${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
     {

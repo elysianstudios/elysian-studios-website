@@ -41,14 +41,28 @@ export default function Archive() {
   const paginated = filtered.slice(0, page * PAGE_SIZE)
   const hasMore   = paginated.length < filtered.length
 
-  // Scroll reveal
+  // Scroll reveal (with guaranteed fallback so cards never stay hidden)
   useEffect(() => {
-    const els = document.querySelectorAll('[data-reveal]')
+    const els = Array.from(document.querySelectorAll('[data-reveal]'))
+    const reveal = (el) => { el.style.opacity = '1'; el.style.transform = 'none' }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      els.forEach(reveal)
+      return
+    }
+
     const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'none' } })
+      entries.forEach(e => { if (e.isIntersecting) { reveal(e.target); obs.unobserve(e.target) } })
     }, { threshold: 0.08 })
     els.forEach(el => obs.observe(el))
-    return () => obs.disconnect()
+
+    // Safety net: if anything is still hidden shortly after mount
+    // (observer didn't fire for in-viewport items on this build), force-reveal.
+    const fallback = setTimeout(() => {
+      els.forEach(el => { if (getComputedStyle(el).opacity === '0') reveal(el) })
+    }, 600)
+
+    return () => { obs.disconnect(); clearTimeout(fallback) }
   }, [paginated.length])
 
   return (
