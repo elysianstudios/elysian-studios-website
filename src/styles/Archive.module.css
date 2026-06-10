@@ -15,8 +15,9 @@
 .heroImage {
   display: block;
   width: 100%;
-  height: auto;
-  object-fit: cover;
+  height: clamp(240px, 48vh, 520px);
+  object-fit: contain;
+  object-position: center;
 }
 
 /* ── Filter Bar ─────────────────────────────────────────────── */
@@ -178,4 +179,5 @@
 
 @media (max-width: 600px) {
   .grid { grid-template-columns: 1fr; }
+  .heroImage { height: auto; }
 }

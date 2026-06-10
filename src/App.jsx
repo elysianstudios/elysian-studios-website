@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import Archive from './pages/Archive'
 import Reader from './pages/Reader'
 import Team from './pages/Team'
+import About from './pages/About'
 import Admin from './pages/Admin'
 import ScrollToTop from './components/ScrollToTop'
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/archive" element={<PageTransition><Archive /></PageTransition>} />
           <Route path="/read/:slug" element={<PageTransition><Reader /></PageTransition>} />
           <Route path="/team" element={<PageTransition><Team /></PageTransition>} />
+          <Route path="/about" element={<PageTransition><About /></PageTransition>} />
           <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
         </Routes>
       </main>

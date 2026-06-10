@@ -16,16 +16,16 @@
 .brand {}
 
 .logo {
-  font-family: var(--serif);
-  font-size: 1.3rem;
-  font-weight: 500;
-  letter-spacing: 0.3em;
+  font-family: 'Huninn', var(--serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.26em;
   color: var(--ivory);
   display: block;
   margin-bottom: 1.25rem;
+  transition: color var(--t-fast);
 }
-.logo span { color: var(--gold); }
-.logo:hover { color: var(--gold-light); }
+.logo:hover { color: var(--gold); }
 
 .tagline {
   font-family: var(--serif);

@@ -10,7 +10,7 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <Link to="/" className={styles.logo}>
-            <span>E</span>LYSIAN
+            ELYSIAN
           </Link>
           <p className={styles.tagline}>
             "Elysian is the echo of infinity,<br />
@@ -45,7 +45,7 @@ export default function Footer() {
           <div className={styles.col}>
             <h5>About</h5>
             <ul>
-              <li><a href="/#about">Our Mission</a></li>
+              <li><Link to="/about">Our Mission</Link></li>
               <li><Link to="/team">Editorial Team</Link></li>
               <li><a href="mailto:elysianstudios188@gmail.com">Submit a Story</a></li>
               <li><a href="mailto:elysianstudios188@gmail.com">Contact</a></li>

@@ -7,7 +7,7 @@ const links = [
   { label: 'Chronicles', section: 'chronicles' },
   { label: 'Archive',    href: '/archive' },
   { label: 'Thinkers',   section: 'thinkers' },
-  { label: 'Team',       href: '/team' },
+  { label: 'About',      href: '/about' },
 ]
 
 export default function Nav() {
@@ -40,7 +40,7 @@ export default function Nav() {
       <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''} ${onDark ? styles.onDark : ''}`}>
         <div className={styles.inner}>
           <Link to="/" className={styles.logo}>
-            <span className={styles.logoE}>E</span>LYSIAN
+            ELYSIAN
           </Link>
 
           <ul className={styles.links}>
