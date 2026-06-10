@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import posts from '../data/posts.json'
 import styles from '../styles/Home.module.css'
@@ -18,6 +18,13 @@ const thinkerPosts  = posts.slice(5, 9)
 
 export default function Home() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const [heroSearch, setHeroSearch] = useState('')
+
+  const submitSearch = (e) => {
+    e.preventDefault()
+    navigate('/archive', { state: { search: heroSearch.trim() } })
+  }
 
   // ── Scroll-to-section on cross-page navigation ─────────────
   useEffect(() => {
@@ -278,6 +285,18 @@ export default function Home() {
               Explore Archive
             </Link>
           </div>
+          <form className={`${styles.heroSearch} hero-actions-block`} onSubmit={submitSearch} role="search">
+            <Search size={16} className={styles.heroSearchIcon} />
+            <input
+              type="search"
+              placeholder="Search chronicles, thinkers, eras…"
+              value={heroSearch}
+              onChange={e => setHeroSearch(e.target.value)}
+              className={styles.heroSearchInput}
+              aria-label="Search chronicles"
+            />
+            <button type="submit" className={styles.heroSearchBtn}>Search</button>
+          </form>
         </div>
 
         {/* Right-side preview stack */}

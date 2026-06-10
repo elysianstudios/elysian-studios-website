@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import posts from '../data/posts.json'
+import archiveBanner from '../images/archive-banner.png'
 import styles from '../styles/Archive.module.css'
 
 const PAGE_SIZE = 12
@@ -13,7 +15,8 @@ function getAllCategories(posts) {
 }
 
 export default function Archive() {
-  const [query,    setQuery]    = useState('')
+  const location = useLocation()
+  const [query,    setQuery]    = useState(location.state?.search || '')
   const [category, setCategory] = useState('All')
   const [page,     setPage]     = useState(1)
 
@@ -67,19 +70,9 @@ export default function Archive() {
 
   return (
     <div className={styles.page}>
-      {/* Hero */}
+      {/* Hero — editorial banner */}
       <div className={styles.hero}>
-        <div className="grain-overlay" />
-        <div className={styles.heroContent}>
-          <span className="section-label">The Archive</span>
-          <h1 className={styles.heroTitle}>Every Life,<br /><em>A Universe</em></h1>
-          <p className={styles.heroSub}>
-            {posts.length} chronicles spanning centuries of human greatness.
-          </p>
-        </div>
-        <div className={styles.heroDecor}>
-          <span>ARCHIVE</span>
-        </div>
+        <img src={archiveBanner} alt="The Archive — biographies of great leaders. Timeless lessons. Enduring legacy." className={styles.heroImage} />
       </div>
 
       {/* Filters */}

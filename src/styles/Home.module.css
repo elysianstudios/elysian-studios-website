@@ -177,6 +177,60 @@
   background: rgba(250, 248, 245, 0.08);
 }
 
+/* Hero search */
+.heroSearch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  max-width: 440px;
+  padding: 0.35rem 0.35rem 0.35rem 1rem;
+  background: rgba(250, 248, 245, 0.12);
+  border: 1px solid rgba(250, 248, 245, 0.25);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.heroSearch:focus-within {
+  border-color: var(--gold);
+  background: rgba(250, 248, 245, 0.18);
+}
+
+.heroSearchIcon {
+  color: rgba(250, 248, 245, 0.7);
+  flex-shrink: 0;
+}
+
+.heroSearchInput {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  color: var(--ivory);
+}
+.heroSearchInput::placeholder { color: rgba(250, 248, 245, 0.55); }
+
+.heroSearchBtn {
+  flex-shrink: 0;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: var(--gold);
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius-full);
+  transition: background 0.3s var(--ease-spring), transform 0.35s var(--ease-spring);
+}
+.heroSearchBtn:hover {
+  background: var(--gold-rich);
+  transform: scale(1.05);
+}
+
 /* Right-side preview stack */
 .heroStack {
   position: absolute;

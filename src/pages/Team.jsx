@@ -3,6 +3,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MessageCircle, Link2, Globe, Mail } from 'lucide-react'
 import team from '../data/team.json'
+import teamIllustration from '../images/team-illustration.png'
 import styles from '../styles/Team.module.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -30,19 +31,23 @@ export default function Team() {
       <section className={styles.hero}>
         <div className="grain-overlay" />
         <div className={styles.heroInner}>
-          <span className={`section-label team-hero-line`}>Our Team</span>
-          <h1 className={`${styles.heroTitle} team-hero-line`}>
-            The Minds<br /><em>Behind Elysian</em>
-          </h1>
-          <div className={`${styles.heroSubWrap} team-hero-line`}>
-            <div className="divider" />
-            <p className={styles.heroSub}>
-              A collective of writers, researchers, designers, and dreamers united by one belief:
-              that the examined life — of the great and the forgotten — is worth telling beautifully.
-            </p>
+          <div className={styles.heroText}>
+            <span className={`section-label team-hero-line`}>Our Team</span>
+            <h1 className={`${styles.heroTitle} team-hero-line`}>
+              The Minds<br /><em>Behind Elysian</em>
+            </h1>
+            <div className={`${styles.heroSubWrap} team-hero-line`}>
+              <div className="divider" />
+              <p className={styles.heroSub}>
+                A collective of writers, researchers, designers, and dreamers united by one belief:
+                that the examined life — of the great and the forgotten — is worth telling beautifully.
+              </p>
+            </div>
+          </div>
+          <div className={`${styles.heroArt} team-hero-line`}>
+            <img src={teamIllustration} alt="The Elysian editorial team at work" />
           </div>
         </div>
-        <div className={styles.heroBgText}>TEAM</div>
       </section>
 
       {/* Mission strip */}

@@ -17,6 +17,14 @@
   z-index: 1;
   max-width: var(--max-width);
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.heroText {
+  min-width: 0;
 }
 
 .heroTitle {
@@ -37,19 +45,13 @@
   margin-top: 1rem;
 }
 
-.heroBgText {
-  position: absolute;
-  right: 3%;
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--serif);
-  font-size: clamp(5rem, 14vw, 14rem);
-  font-weight: 700;
-  color: var(--bone);
-  user-select: none;
-  pointer-events: none;
-  letter-spacing: 0.05em;
-  line-height: 1;
+.heroArt {
+  position: relative;
+}
+.heroArt img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
 }
 
 /* ── Mission Strip ──────────────────────────────────────────── */
@@ -247,9 +249,13 @@
   .teamGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 860px) {
+  .heroInner { grid-template-columns: 1fr; gap: 2rem; }
+  .heroArt { order: -1; max-width: 480px; }
+}
+
 @media (max-width: 600px) {
   .teamGrid { grid-template-columns: 1fr; }
-  .heroBgText { display: none; }
   .missionInner {
     flex-direction: column;
     gap: 1.75rem;
