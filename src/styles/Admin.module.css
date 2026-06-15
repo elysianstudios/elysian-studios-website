@@ -561,6 +561,14 @@
 /* ── Meta panel ─────────────────────────────────────────────── */
 .metaPanel { padding: 0.25rem 0; }
 
+.uploadRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.uploadRow .input { flex: 1; }
+.uploadRow .btn { white-space: nowrap; }
+
 .imgPreview {
   margin-top: 0.75rem;
   border-radius: var(--radius-sm);

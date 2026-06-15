@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock, Film } from 'lucide-react'
+import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock, Film, UploadCloud } from 'lucide-react'
 import { fetchPostsFile, writePostsFile, slugify } from '../utils/githubApi'
 import { parseContent } from '../utils/parseContent'
 import { sanitize } from '../utils/sanitizeHtml'
@@ -9,6 +9,27 @@ import styles from '../styles/Admin.module.css'
 
 const ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
 const LOCAL_KEY = 'elysian-local-posts' // local-preview edits cache (this browser only)
+
+// Cloudinary image hosting. Uploads from the browser use an UNSIGNED upload
+// preset, so no API key/secret is ever exposed here. Create an unsigned preset
+// named below in your Cloudinary dashboard: Settings → Upload → Upload presets.
+const CLOUDINARY_CLOUD  = 'ddpq9ziwk'
+const CLOUDINARY_PRESET = 'elysian_unsigned'
+
+// Upload a File to Cloudinary; returns an optimized (f_auto,q_auto) delivery URL.
+async function uploadToCloudinary(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('upload_preset', CLOUDINARY_PRESET)
+  fd.append('folder', 'elysian')
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST',
+    body: fd,
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error?.message || `Upload failed (${res.status})`)
+  return data.secure_url.replace('/image/upload/', '/image/upload/f_auto,q_auto/')
+}
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
@@ -140,8 +161,11 @@ export default function Admin() {
   const [search,    setSearch]    = useState('')
   const [deleteId,  setDeleteId]  = useState(null)
   const [sortBy,    setSortBy]    = useState('date') // 'date' | 'title'
+  const [uploading, setUploading] = useState(false)
 
-  const contentRef = useRef(null)
+  const contentRef       = useRef(null)
+  const contentImgRef    = useRef(null) // hidden file input for in-content uploads
+  const featuredImgRef   = useRef(null) // hidden file input for the featured image
 
   /* ── Seed posts on login. Prefer any local-preview edits saved in this
      browser (localStorage) over the bundled file, so create/edit/delete
@@ -283,6 +307,35 @@ export default function Admin() {
     } catch (e) {
       setError('Delete failed: ' + (e?.message || 'unknown error'))
     }
+  }
+
+  /* ── Image upload (Cloudinary, unsigned) ───────────────────── */
+  const handleUpload = async (file, onUrl) => {
+    if (!file) return
+    setUploading(true)
+    setError('')
+    try {
+      const url = await uploadToCloudinary(file)
+      onUrl(url)
+      setSuccess('Image uploaded to Cloudinary.')
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (e) {
+      setError(`Image upload failed: ${e.message}. Make sure an unsigned upload preset named "${CLOUDINARY_PRESET}" exists in your Cloudinary dashboard (Settings → Upload).`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // Insert an uploaded image into the content at the cursor.
+  const insertImageHtml = (url) => {
+    const ta = contentRef.current
+    const block = `\n<figure>\n  <img src="${url}" alt="" />\n</figure>\n`
+    setEditPost(p => {
+      const c = p.content || ''
+      const start = ta ? ta.selectionStart : c.length
+      const end = ta ? ta.selectionEnd : c.length
+      return { ...p, content: c.slice(0, start) + block + c.slice(end) }
+    })
   }
 
   /* ── Rich editor toolbar ───────────────────────────────────── */
@@ -595,8 +648,16 @@ export default function Admin() {
                 <div className={styles.toolbarDivider} />
                 <div className={styles.toolbarGroup}>
                   <button type="button" className={styles.toolBtn} onClick={() => applyFormat('link')} title="Link"><LinkIcon size={15} /></button>
-                  <button type="button" className={styles.toolBtn} onClick={() => applyFormat('img')} title="Image"><ImageIcon size={15} /></button>
+                  <button type="button" className={styles.toolBtn} onClick={() => applyFormat('img')} title="Image by URL"><ImageIcon size={15} /></button>
+                  <button type="button" className={styles.toolBtn} onClick={() => contentImgRef.current?.click()} title="Upload image" disabled={uploading}><UploadCloud size={15} /></button>
                   <button type="button" className={styles.toolBtn} onClick={() => applyFormat('video')} title="Embed video (YouTube / Vimeo)"><Film size={15} /></button>
+                  <input
+                    ref={contentImgRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={e => { handleUpload(e.target.files?.[0], insertImageHtml); e.target.value = '' }}
+                  />
                 </div>
               </div>
               <textarea
@@ -652,13 +713,30 @@ export default function Admin() {
                   />
                 </div>
                 <div className={styles.formGroupFull}>
-                  <label className={styles.label}>Featured Image URL</label>
-                  <input
-                    className={styles.input}
-                    value={editPost.image}
-                    onChange={e => setEditPost(p => ({ ...p, image: e.target.value }))}
-                    placeholder="https://images.unsplash.com/…"
-                  />
+                  <label className={styles.label}>Featured Image <span className={styles.labelHint}>(paste a URL or upload)</span></label>
+                  <div className={styles.uploadRow}>
+                    <input
+                      className={styles.input}
+                      value={editPost.image}
+                      onChange={e => setEditPost(p => ({ ...p, image: e.target.value }))}
+                      placeholder="https://res.cloudinary.com/… or upload →"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => featuredImgRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      <UploadCloud size={15} /> {uploading ? 'Uploading…' : 'Upload'}
+                    </button>
+                    <input
+                      ref={featuredImgRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={e => { handleUpload(e.target.files?.[0], url => setEditPost(p => ({ ...p, image: url }))); e.target.value = '' }}
+                    />
+                  </div>
                   {editPost.image && (
                     <div className={styles.imgPreview}>
                       <img src={editPost.image} alt="Preview" onError={e => e.target.style.display = 'none'} />
