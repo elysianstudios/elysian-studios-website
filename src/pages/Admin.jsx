@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock } from 'lucide-react'
+import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock, Film } from 'lucide-react'
 import { fetchPostsFile, writePostsFile, slugify } from '../utils/githubApi'
 import { parseContent } from '../utils/parseContent'
+import { sanitize } from '../utils/sanitizeHtml'
+import { personFromImage } from '../utils/postMeta'
 import localPosts from '../data/posts.json'
-import DOMPurify from 'dompurify'
 import styles from '../styles/Admin.module.css'
 
 const ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
@@ -22,11 +23,32 @@ function EmptyPost() {
     content: '',
     date: new Date().toISOString().split('T')[0],
     image: '',
+    person: '',
     author: 'Elysian Studios',
     readTime: 5,
     categories: [],
     tags: [],
   }
+}
+
+// Parse a YouTube/Vimeo URL into an embeddable iframe src. Returns '' if unrecognized.
+function toEmbedSrc(url) {
+  if (!url) return ''
+  try {
+    const u = new URL(url.trim())
+    const host = u.hostname.replace(/^www\./, '')
+    if (host === 'youtu.be') return `https://www.youtube.com/embed/${u.pathname.slice(1)}`
+    if (host.endsWith('youtube.com')) {
+      if (u.pathname.startsWith('/embed/')) return `https://www.youtube.com${u.pathname}`
+      const v = u.searchParams.get('v')
+      if (v) return `https://www.youtube.com/embed/${v}`
+    }
+    if (host.endsWith('vimeo.com')) {
+      const id = u.pathname.split('/').filter(Boolean).pop()
+      if (id && /^\d+$/.test(id)) return `https://player.vimeo.com/video/${id}`
+    }
+  } catch { /* not a URL */ }
+  return ''
 }
 
 /* ── Rich text toolbar helpers ─────────────────────────────── */
@@ -49,6 +71,48 @@ function insertLine(textarea, prefix, placeholder) {
   return { value: newVal, cursor: lineStart + stripped.length }
 }
 
+/* ── Tag / category picker: toggle existing, add new ───────── */
+function TagPicker({ options, value, onChange, placeholder }) {
+  const [draft, setDraft] = useState('')
+  const selected = value || []
+  const toggle = (t) =>
+    onChange(selected.includes(t) ? selected.filter(x => x !== t) : [...selected, t])
+  const add = () => {
+    const t = draft.trim()
+    if (t && !selected.includes(t)) onChange([...selected, t])
+    setDraft('')
+  }
+  const allChips = [...new Set([...options, ...selected])]
+  return (
+    <div className={styles.tagPicker}>
+      {allChips.length > 0 && (
+        <div className={styles.tagChips}>
+          {allChips.map(t => (
+            <button
+              type="button"
+              key={t}
+              className={`${styles.tagChip} ${selected.includes(t) ? styles.tagChipActive : ''}`}
+              onClick={() => toggle(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className={styles.tagPickerAdd}>
+        <input
+          className={styles.input}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add() } }}
+          placeholder={placeholder}
+        />
+        <button type="button" className="btn btn-ghost" onClick={add}>Add</button>
+      </div>
+    </div>
+  )
+}
+
 export default function Admin() {
   const [authed,    setAuthed]    = useState(() => sessionStorage.getItem('elysian-admin') === '1')
   const [password,  setPassword]  = useState('')
@@ -69,8 +133,6 @@ export default function Admin() {
 
   const [view,      setView]      = useState('list')
   const [editPost,  setEditPost]  = useState(null)
-  const [catInput,  setCatInput]  = useState('')
-  const [tagInput,  setTagInput]  = useState('')
   const [preview,   setPreview]   = useState(false)
   const [activeTab, setActiveTab] = useState('content') // 'content' | 'meta' | 'preview'
 
@@ -157,17 +219,13 @@ export default function Admin() {
   /* ── Post CRUD ─────────────────────────────────────────────── */
   const openNew = () => {
     setEditPost(EmptyPost())
-    setCatInput('')
-    setTagInput('')
     setActiveTab('content')
     setPreview(false)
     setView('new')
   }
 
   const openEdit = (post) => {
-    setEditPost({ ...post })
-    setCatInput(post.categories?.join(', ') || '')
-    setTagInput(post.tags?.join(', ') || '')
+    setEditPost({ categories: [], tags: [], person: '', ...post })
     setActiveTab('content')
     setPreview(false)
     setView('edit')
@@ -179,8 +237,8 @@ export default function Admin() {
     const post = {
       ...editPost,
       slug,
-      categories: catInput.split(',').map(c => c.trim()).filter(Boolean),
-      tags: tagInput.split(',').map(t => t.trim()).filter(Boolean),
+      categories: editPost.categories || [],
+      tags: editPost.tags || [],
     }
     let updated
     if (view === 'new') {
@@ -233,6 +291,16 @@ export default function Admin() {
         result = { value: newVal, cursor: ta.selectionStart }
         break
       }
+      case 'video': {
+        const url = prompt('Paste a YouTube or Vimeo URL:')
+        if (!url) return
+        const embed = toEmbedSrc(url)
+        if (!embed) { alert('Unrecognized URL. Use a YouTube or Vimeo link.'); return }
+        const block = `\n<figure class="video-embed">\n  <iframe src="${embed}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n</figure>\n`
+        const newVal = ta.value.slice(0, ta.selectionStart) + block + ta.value.slice(ta.selectionEnd)
+        result = { value: newVal, cursor: ta.selectionStart + block.length }
+        break
+      }
       default: return
     }
     const { value, cursor } = result
@@ -256,6 +324,7 @@ export default function Admin() {
 
   /* ── Stats ─────────────────────────────────────────────────── */
   const allCats = [...new Set(posts.flatMap(p => p.categories || []))]
+  const allTags = [...new Set(posts.flatMap(p => p.tags || []))]
   const totalWords = posts.reduce((sum, p) => sum + (p.content?.replace(/<[^>]+>/g, '').split(/\s+/).length || 0), 0)
 
   /* ── Login screen ──────────────────────────────────────────── */
@@ -492,6 +561,7 @@ export default function Admin() {
                 <div className={styles.toolbarGroup}>
                   <button type="button" className={styles.toolBtn} onClick={() => applyFormat('link')} title="Link"><LinkIcon size={15} /></button>
                   <button type="button" className={styles.toolBtn} onClick={() => applyFormat('img')} title="Image"><ImageIcon size={15} /></button>
+                  <button type="button" className={styles.toolBtn} onClick={() => applyFormat('video')} title="Embed video (YouTube / Vimeo)"><Film size={15} /></button>
                 </div>
               </div>
               <textarea
@@ -559,38 +629,33 @@ export default function Admin() {
                       <img src={editPost.image} alt="Preview" onError={e => e.target.style.display = 'none'} />
                     </div>
                   )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Categories <span className={styles.labelHint}>(comma-separated)</span></label>
+                  <label className={styles.label} style={{ marginTop: '1rem' }}>
+                    Person / subject <span className={styles.labelHint}>(shown under the featured image)</span>
+                  </label>
                   <input
                     className={styles.input}
-                    value={catInput}
-                    onChange={e => setCatInput(e.target.value)}
-                    placeholder="Philosophy, Science"
+                    value={editPost.person || ''}
+                    onChange={e => setEditPost(p => ({ ...p, person: e.target.value }))}
+                    placeholder={personFromImage(editPost.image) || 'e.g. Marie Curie'}
                   />
-                  {catInput && (
-                    <div className={styles.tagPreview}>
-                      {catInput.split(',').map(c => c.trim()).filter(Boolean).map(c => (
-                        <span key={c} className="tag">{c}</span>
-                      ))}
-                    </div>
-                  )}
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Tags <span className={styles.labelHint}>(comma-separated)</span></label>
-                  <input
-                    className={styles.input}
-                    value={tagInput}
-                    onChange={e => setTagInput(e.target.value)}
-                    placeholder="wisdom, history, innovation"
+                <div className={styles.formGroupFull}>
+                  <label className={styles.label}>Categories <span className={styles.labelHint}>(tap to select, or add new)</span></label>
+                  <TagPicker
+                    options={allCats}
+                    value={editPost.categories}
+                    onChange={cats => setEditPost(p => ({ ...p, categories: cats }))}
+                    placeholder="Add a category…"
                   />
-                  {tagInput && (
-                    <div className={styles.tagPreview}>
-                      {tagInput.split(',').map(t => t.trim()).filter(Boolean).map(t => (
-                        <span key={t} className="tag">{t}</span>
-                      ))}
-                    </div>
-                  )}
+                </div>
+                <div className={styles.formGroupFull}>
+                  <label className={styles.label}>Tags <span className={styles.labelHint}>(tap to select, or add new)</span></label>
+                  <TagPicker
+                    options={allTags}
+                    value={editPost.tags}
+                    onChange={tags => setEditPost(p => ({ ...p, tags }))}
+                    placeholder="Add a tag…"
+                  />
                 </div>
               </div>
             </div>
@@ -602,17 +667,21 @@ export default function Admin() {
               <div className={styles.previewHeader}>
                 {editPost.categories?.slice(0, 1).map(c => <span key={c} className="tag">{c}</span>)}
                 <h1 className={styles.previewTitle}>{editPost.title || 'Untitled Chronicle'}</h1>
-                <div className={styles.previewMeta}>
-                  {editPost.date && <span><Calendar size={13} /> {editPost.date}</span>}
-                  <span><Clock size={13} /> {editPost.readTime || 5} min read</span>
-                  {editPost.author && <span>By {editPost.author}</span>}
-                </div>
-                {editPost.image && <img src={editPost.image} alt="" className={styles.previewImg} />}
+                {editPost.image && (
+                  <figure className={styles.previewFigure}>
+                    <img src={editPost.image} alt="" className={styles.previewImg} />
+                    {(editPost.person || personFromImage(editPost.image)) && (
+                      <figcaption className={styles.previewCaption}>
+                        {editPost.person || personFromImage(editPost.image)}
+                      </figcaption>
+                    )}
+                  </figure>
+                )}
               </div>
               <div
                 className={styles.previewBody}
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(parseContent(editPost.content || '<p>No content yet.</p>'))
+                  __html: sanitize(parseContent(editPost.content || '<p>No content yet.</p>'))
                 }}
               />
             </div>
@@ -632,7 +701,11 @@ export default function Admin() {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <h3>Delete this chronicle?</h3>
-            <p>This will permanently remove the post from GitHub. This action cannot be undone.</p>
+            <p>
+              {ghLoaded
+                ? 'This permanently removes the post from the published site (commits to GitHub). This cannot be undone.'
+                : 'This removes the post from your local preview. Connect GitHub to publish the deletion to the live site.'}
+            </p>
             <div className={styles.modalActions}>
               <button className="btn btn-ghost" onClick={() => setDeleteId(null)}>Cancel</button>
               <button className={`btn ${styles.dangerBtn}`} onClick={confirmDelete} disabled={saving}>

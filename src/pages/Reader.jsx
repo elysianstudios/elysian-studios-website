@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import DOMPurify from 'dompurify'
 import { Sun, BookOpen, Moon, Share2, Copy, ArrowLeft, ArrowRight, Minus, Plus, Type } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import posts from '../data/posts.json'
 import { parseContent } from '../utils/parseContent'
+import { sanitize } from '../utils/sanitizeHtml'
+import { personName } from '../utils/postMeta'
 import styles from '../styles/Reader.module.css'
 
 const MODES = [
@@ -12,30 +13,6 @@ const MODES = [
   { key: 'sepia', icon: BookOpen, label: 'Sepia' },
   { key: 'dark',  icon: Moon,     label: 'Dark'  },
 ]
-
-// Derive the subject's name from the featured image filename
-// (e.g. ".../Dr.-Jane-Goodall-1.png" -> "Dr. Jane Goodall").
-function personFromImage(image) {
-  if (!image) return ''
-  let file = image.split('|')[0].split('/').pop().split('?')[0]
-  file = file.replace(/\.(png|jpe?g|webp|gif|svg|avif)$/i, '')
-  file = file
-    .replace(/[-_]?scaled$/i, '')
-    .replace(/[-_]\d+$/, '')        // trailing -1, _2
-    .replace(/[-_]+/g, ' ')
-    .trim()
-  // Drop filenames that clearly aren't names (no letters, or single token of digits)
-  if (!/[a-z]/i.test(file)) return ''
-  return file.replace(/\s+/g, ' ')
-}
-
-function sanitize(html) {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p','br','strong','em','b','i','u','a','ul','ol','li','h1','h2','h3','h4','h5','h6','blockquote','img','figure','figcaption','hr','span','div','table','thead','tbody','tr','th','td'],
-    ALLOWED_ATTR: ['href','src','alt','title','class','id','target','rel'],
-    FORCE_BODY: true,
-  })
-}
 
 export default function Reader() {
   const { slug } = useParams()
@@ -98,7 +75,7 @@ export default function Reader() {
   if (!post) return null
 
   const cleanHtml = sanitize(parseContent(post.content))
-  const person = personFromImage(post.image)
+  const person = personName(post)
 
   return (
     <div className={`${styles.page} ${styles[mode]}`} data-mode={mode}>

@@ -18,11 +18,10 @@
   inset: 0;
   bottom: auto;
   height: calc(100% + 0.6rem);
-  background: linear-gradient(to bottom, var(--ivory) 35%, rgba(250, 248, 245, 0));
-  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
-  mask-image: linear-gradient(to bottom, #000 60%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   pointer-events: none;
   z-index: -1;
 }

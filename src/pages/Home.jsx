@@ -14,7 +14,7 @@ const FALLBACK = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w
 const heroPosts    = posts.slice(0, 5)
 const carouselPosts = posts.slice(5, 13)
 const archivePosts  = posts.slice(1, 5)
-const thinkerPosts  = posts.slice(5, 9)
+const thinkerPosts  = posts.filter(p => p.image && !p.categories?.includes('Epics')).slice(5, 9)
 
 export default function Home() {
   const location = useLocation()

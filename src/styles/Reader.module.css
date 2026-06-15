@@ -287,6 +287,26 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Responsive media embeds (YouTube/Vimeo iframes + native video) */
+.body :global(iframe),
+.body :global(video) {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 0;
+  border-radius: var(--radius-md);
+  margin: 2em 0;
+  box-shadow: var(--shadow-md);
+  display: block;
+}
+.body :global(figure.video-embed) {
+  margin: 2em 0;
+}
+.body :global(figure.video-embed) iframe,
+.body :global(figure.video-embed) video {
+  margin: 0;
+}
+
 .body :global(a) {
   color: var(--gold-rich);
   text-decoration: underline;
