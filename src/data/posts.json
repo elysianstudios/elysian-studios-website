@@ -28,6 +28,9 @@
     "tags": []
   },
   {
+    "categories": [],
+    "tags": [],
+    "person": "",
     "id": 6612,
     "title": "When something is important enough, you do it even if the odds are not in your favor!",
     "slug": "when-something-is-important-enough-you-do-it-even-if-the-odds-are-not-in-your-fa",
@@ -36,9 +39,7 @@
     "date": "2026-03-31",
     "image": "https://elysian.studio/wp-content/uploads/2026/03/Elon-Musk.png",
     "author": "Elysian Studios",
-    "readTime": 3,
-    "categories": [],
-    "tags": []
+    "readTime": 3
   },
   {
     "id": 6414,
