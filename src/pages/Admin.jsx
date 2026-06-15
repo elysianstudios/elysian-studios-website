@@ -8,6 +8,7 @@ import localPosts from '../data/posts.json'
 import styles from '../styles/Admin.module.css'
 
 const ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
+const LOCAL_KEY = 'elysian-local-posts' // local-preview edits cache (this browser only)
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
@@ -142,10 +143,20 @@ export default function Admin() {
 
   const contentRef = useRef(null)
 
-  /* ── Seed local posts on login (browse/create without a token) ── */
+  /* ── Seed posts on login. Prefer any local-preview edits saved in this
+     browser (localStorage) over the bundled file, so create/edit/delete
+     persist across reloads even without a GitHub token. ── */
   useEffect(() => {
     if (authed && posts.length === 0 && !ghLoaded) {
-      setPosts(localPosts)
+      let seed = localPosts
+      try {
+        const saved = localStorage.getItem(LOCAL_KEY)
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length) seed = parsed
+        }
+      } catch { /* ignore corrupt cache */ }
+      setPosts(seed)
     }
   }, [authed])
 
@@ -193,10 +204,14 @@ export default function Admin() {
 
   const savePosts = async (newPosts, msg) => {
     if (!token || !sha || !ghLoaded) {
-      // Local preview mode: apply to the in-memory list so the portal is
-      // fully usable for testing. Changes aren't pushed until GitHub is connected.
+      // Local preview mode: persist to this browser's localStorage so the
+      // change (create / edit / delete) survives reloads. It is NOT yet on
+      // the live site — connect GitHub to publish it for everyone.
       setError('')
-      setSuccess('Updated in local preview — connect GitHub to publish this change.')
+      try {
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(newPosts))
+      } catch { /* storage full / disabled — still update in-memory below */ }
+      setSuccess('Saved in this browser — connect GitHub to publish it to the live site.')
       setTimeout(() => setSuccess(''), 4500)
       return true
     }
@@ -205,6 +220,7 @@ export default function Admin() {
     try {
       const result = await writePostsFile(token, newPosts, sha, msg)
       setSha(result.content.sha)
+      try { localStorage.removeItem(LOCAL_KEY) } catch { /* noop */ }
       setSuccess('Saved successfully to GitHub!')
       setTimeout(() => setSuccess(''), 4000)
       return true
@@ -431,6 +447,19 @@ export default function Admin() {
             You're viewing the bundled local posts. Connecting GitHub loads the live data and lets you publish changes.
             Token stored in sessionStorage only — cleared when you close the tab.
           </p>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ marginTop: '0.5rem' }}
+            onClick={() => {
+              try { localStorage.removeItem(LOCAL_KEY) } catch { /* noop */ }
+              setPosts(localPosts)
+              setSuccess('Local preview reset to the published posts.')
+              setTimeout(() => setSuccess(''), 4000)
+            }}
+          >
+            Reset local preview changes
+          </button>
         </div>
       )}
 

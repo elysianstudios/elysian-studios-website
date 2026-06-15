@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Clock, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { personName } from '../utils/postMeta'
 import styles from '../styles/PostCard.module.css'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800&q=80'
@@ -7,6 +8,7 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1516979187457-637abb4f935
 export default function PostCard({ post, variant = 'default', style }) {
   const image = post.image || PLACEHOLDER
   const primaryCat = post.categories?.[0] || 'Elysian'
+  const person = personName(post)
 
   return (
     <Link
@@ -32,8 +34,7 @@ export default function PostCard({ post, variant = 'default', style }) {
         )}
         <div className={styles.meta}>
           <span className={styles.metaItem}>
-            <Clock size={12} />
-            {post.readTime || 5} min
+            {person || primaryCat}
           </span>
           <span className={styles.readMore}>
             Read <ArrowRight size={12} />
