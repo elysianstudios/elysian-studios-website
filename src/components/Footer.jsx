@@ -1,6 +1,26 @@
 import { Link } from 'react-router-dom'
-import { Share2, MessageCircle, Rss, Mail } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import styles from '../styles/Footer.module.css'
+
+// Paste your deployed Google Apps Script web-app URL here (see
+// newsletter-backend.gs). Until then, signups just show the toast.
+const NEWSLETTER_ENDPOINT = ''
+
+const InstagramIcon = (props) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+)
+
+const LinkedInIcon = (props) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect x="2" y="9" width="4" height="12" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+)
 
 export default function Footer() {
   const year = new Date().getFullYear()
@@ -17,14 +37,11 @@ export default function Footer() {
             Preserved. Shared. Remembered.
           </p>
           <div className={styles.socials}>
-            <a href="https://instagram.com/elysianstudios" aria-label="Instagram" target="_blank" rel="noopener">
-              <Share2 size={16} />
+            <a href="https://www.instagram.com/elysianexps/" aria-label="Instagram" target="_blank" rel="noopener">
+              <InstagramIcon />
             </a>
-            <a href="https://x.com/elysianstudios" aria-label="X / Twitter" target="_blank" rel="noopener">
-              <MessageCircle size={16} />
-            </a>
-            <a href="/rss.xml" aria-label="RSS Feed">
-              <Rss size={16} />
+            <a href="https://www.linkedin.com/company/elysianstudios/" aria-label="LinkedIn" target="_blank" rel="noopener">
+              <LinkedInIcon />
             </a>
             <a href="mailto:elysianstudios188@gmail.com" aria-label="Email">
               <Mail size={16} />
@@ -55,6 +72,16 @@ export default function Footer() {
             <h5>Newsletter</h5>
             <form className={styles.miniForm} onSubmit={e => {
               e.preventDefault()
+              const email = e.target.querySelector('input[type="email"]').value.trim()
+              if (NEWSLETTER_ENDPOINT && email) {
+                // Fire-and-forget POST; no-cors so the static page isn't blocked.
+                fetch(NEWSLETTER_ENDPOINT, {
+                  method: 'POST',
+                  mode: 'no-cors',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, source: 'footer' }),
+                }).catch(() => {})
+              }
               const msg = document.createElement('div')
               msg.className = 'toast show'
               msg.textContent = 'Welcome to Elysian. ✦'

@@ -5,7 +5,7 @@
 
 .hero {
   position: relative;
-  padding: calc(72px + clamp(3rem, 8vw, 6rem)) clamp(1.5rem, 5vw, 4rem) clamp(4rem, 8vw, 7rem);
+  padding: calc(72px + clamp(3rem, 8vw, 6rem)) clamp(1.5rem, 5vw, 4rem) clamp(10rem, 16vw, 16rem);
   background: var(--ivory-warm);
   overflow: hidden;
 }
@@ -48,10 +48,12 @@
 
 .bgText {
   position: absolute;
-  right: -2%;
-  bottom: -2%;
+  left: 50%;
+  right: auto;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
   font-family: 'Huninn', var(--serif);
-  font-size: clamp(5rem, 16vw, 16rem);
+  font-size: clamp(3.5rem, 11vw, 11rem);
   font-weight: 400;
   color: var(--bone);
   opacity: 0.4;
