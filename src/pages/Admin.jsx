@@ -255,11 +255,17 @@ export default function Admin() {
   }
 
   const confirmDelete = async () => {
-    const updated = posts.filter(p => p.id !== deleteId)
-    const ok = await savePosts(updated, `remove: post #${deleteId}`)
-    if (ok) {
-      setPosts(updated)
-      setDeleteId(null)
+    const id = deleteId
+    const updated = posts.filter(p => p.id !== id)
+    try {
+      const ok = await savePosts(updated, `remove: post #${id}`)
+      if (ok) {
+        setPosts(updated)
+        setDeleteId(null)
+      }
+      // on failure savePosts has set `error`; modal shows it and stays open
+    } catch (e) {
+      setError('Delete failed: ' + (e?.message || 'unknown error'))
     }
   }
 
@@ -698,16 +704,17 @@ export default function Admin() {
 
       {/* Delete modal */}
       {deleteId && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
+        <div className={styles.modalOverlay} onClick={() => !saving && setDeleteId(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h3>Delete this chronicle?</h3>
             <p>
               {ghLoaded
                 ? 'This permanently removes the post from the published site (commits to GitHub). This cannot be undone.'
                 : 'This removes the post from your local preview. Connect GitHub to publish the deletion to the live site.'}
             </p>
+            {error && <p className={styles.modalError}><AlertCircle size={14} /> {error}</p>}
             <div className={styles.modalActions}>
-              <button className="btn btn-ghost" onClick={() => setDeleteId(null)}>Cancel</button>
+              <button className="btn btn-ghost" onClick={() => { setError(''); setDeleteId(null) }} disabled={saving}>Cancel</button>
               <button className={`btn ${styles.dangerBtn}`} onClick={confirmDelete} disabled={saving}>
                 {saving ? 'Deleting…' : 'Delete'}
               </button>

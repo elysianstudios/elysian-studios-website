@@ -374,6 +374,15 @@
   margin-bottom: 1.75rem;
 }
 
+.modalError {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
 .modalActions {
   display: flex;
   justify-content: flex-end;

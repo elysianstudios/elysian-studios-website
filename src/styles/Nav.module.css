@@ -130,6 +130,23 @@
 .hamburger:hover { color: var(--gold); }
 .nav.onDark .hamburger { color: var(--ivory); }
 
+/* Reader dark mode: the page behind the unscrolled (transparent) nav is
+   near-black, so dark ink text vanishes — switch nav text to ivory.
+   When scrolled, the pill is ivory-backed so default dark text is fine. */
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .logo,
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .link,
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .hamburger {
+  color: var(--ivory);
+}
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .logo:hover,
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .link:hover,
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .link.active {
+  color: var(--gold);
+}
+:global([data-reader-mode='dark']) .nav:not(.scrolled) .link::after {
+  background: rgba(250, 248, 245, 0.6);
+}
+
 /* ── Mobile Menu ────────────────────────────────────────────── */
 .mobileMenu {
   position: fixed;
