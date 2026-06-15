@@ -14,6 +14,7 @@ const Archive = lazy(() => import('./pages/Archive'))
 const Reader  = lazy(() => import('./pages/Reader'))
 const Team    = lazy(() => import('./pages/Team'))
 const About   = lazy(() => import('./pages/About'))
+const Contact = lazy(() => import('./pages/Contact'))
 const Admin   = lazy(() => import('./pages/Admin'))
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="/read/:slug" element={<PageTransition><Reader /></PageTransition>} />
               <Route path="/team" element={<PageTransition><Team /></PageTransition>} />
               <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+              <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
               <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
             </Routes>
           </Suspense>

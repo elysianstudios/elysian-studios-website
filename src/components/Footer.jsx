@@ -47,8 +47,8 @@ export default function Footer() {
             <ul>
               <li><Link to="/about">Our Mission</Link></li>
               <li><Link to="/team">Editorial Team</Link></li>
-              <li><a href="mailto:elysianstudios188@gmail.com">Submit a Story</a></li>
-              <li><a href="mailto:elysianstudios188@gmail.com">Contact</a></li>
+              <li><Link to="/contact" state={{ reason: 'story' }}>Submit a Story</Link></li>
+              <li><Link to="/contact">Contact</Link></li>
             </ul>
           </div>
           <div className={styles.col}>
