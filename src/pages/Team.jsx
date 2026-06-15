@@ -39,8 +39,8 @@ export default function Team() {
             <div className={`${styles.heroSubWrap} team-hero-line`}>
               <div className="divider" />
               <p className={styles.heroSub}>
-                A collective of writers, researchers, designers, and dreamers united by one belief:
-                that the examined life — of the great and the forgotten — is worth telling beautifully.
+                Writers, researchers, designers, dreamers — all here for the same reason:
+                beautiful stories don't tell themselves.
               </p>
             </div>
           </div>
@@ -133,8 +133,8 @@ export default function Team() {
           <span className="section-label">Write for Elysian</span>
           <h2 className={styles.joinTitle}>Have a story<br /><em>worth telling?</em></h2>
           <p className={styles.joinText}>
-            We're always looking for passionate writers and researchers who believe
-            that history's great lives deserve a platform as remarkable as the lives themselves.
+            We're always looking for writers and researchers who believe
+            a great life deserves a great telling.
           </p>
           <a href="mailto:elysianstudios188@gmail.com" className="btn btn-primary">
             Get in Touch

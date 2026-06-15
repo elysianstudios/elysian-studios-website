@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ArrowRight, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import posts from '../data/posts.json'
 import styles from '../styles/Home.module.css'
@@ -18,13 +18,6 @@ const thinkerPosts  = posts.slice(5, 9)
 
 export default function Home() {
   const location = useLocation()
-  const navigate = useNavigate()
-  const [heroSearch, setHeroSearch] = useState('')
-
-  const submitSearch = (e) => {
-    e.preventDefault()
-    navigate('/archive', { state: { search: heroSearch.trim() } })
-  }
 
   // ── Scroll-to-section on cross-page navigation ─────────────
   useEffect(() => {
@@ -107,20 +100,6 @@ export default function Home() {
         }
       )
     })
-    // Parallax on ELYSIAN text — desktop only
-    if (window.innerWidth > 768) {
-      gsap.to('.quote-bg-text', {
-        y: -80,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.quote-section',
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: true,
-        },
-      })
-    }
-
     return () => ScrollTrigger.getAll().forEach(t => t.kill())
   }, [])
 
@@ -209,20 +188,20 @@ export default function Home() {
     const words = document.querySelectorAll('.hero-word')
     if (!words.length) return
     gsap.fromTo(words,
-      { y: 28, opacity: 0, scale: 0.96 },
-      { y: 0, opacity: 1, scale: 1, stagger: 0.04, duration: 0.65, ease: 'back.out(1.7)', delay: 0.25 }
+      { y: 24, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.045, duration: 0.9, ease: 'expo.out', delay: 0.2 }
     )
     gsap.fromTo('.hero-cat-label',
-      { y: 12, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.5, ease: 'back.out(2)', delay: 0.1 }
+      { y: 10, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.7, ease: 'expo.out', delay: 0.1 }
     )
     gsap.fromTo('.hero-excerpt-text',
-      { y: 14, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.55, ease: 'back.out(1.4)', delay: 0.55 }
+      { y: 12, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: 'expo.out', delay: 0.5 }
     )
     gsap.fromTo('.hero-actions-block',
-      { y: 12, opacity: 0, scale: 0.97 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(2)', delay: 0.72 }
+      { y: 10, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: 'expo.out', delay: 0.65 }
     )
   }, [activeIdx])
 
@@ -285,18 +264,6 @@ export default function Home() {
               Explore Archive
             </Link>
           </div>
-          <form className={`${styles.heroSearch} hero-actions-block`} onSubmit={submitSearch} role="search">
-            <Search size={16} className={styles.heroSearchIcon} />
-            <input
-              type="search"
-              placeholder="Search chronicles, thinkers, eras…"
-              value={heroSearch}
-              onChange={e => setHeroSearch(e.target.value)}
-              className={styles.heroSearchInput}
-              aria-label="Search chronicles"
-            />
-            <button type="submit" className={styles.heroSearchBtn}>Search</button>
-          </form>
         </div>
 
         {/* Right-side preview stack */}
@@ -468,7 +435,7 @@ export default function Home() {
           <div className={`${styles.newsletterText} gsap-reveal`}>
             <span className="section-label">Join the Sanctuary</span>
             <h2>Receive the chronicles.<br /><em>Carry the wisdom.</em></h2>
-            <p>New essays, portraits, and meditations — delivered with intention, not noise.</p>
+            <p>Essays, portraits, meditations — sent with care.</p>
           </div>
           <form className={`${styles.newsletterForm} gsap-reveal`} onSubmit={e => {
             e.preventDefault()

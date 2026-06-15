@@ -13,8 +13,8 @@ export default function Footer() {
             ELYSIAN
           </Link>
           <p className={styles.tagline}>
-            "Elysian is the echo of infinity,<br />
-            where silence speaks in symphony."
+            Extraordinary lives.<br />
+            Preserved. Shared. Remembered.
           </p>
           <div className={styles.socials}>
             <a href="https://instagram.com/elysianstudios" aria-label="Instagram" target="_blank" rel="noopener">
@@ -53,9 +53,6 @@ export default function Footer() {
           </div>
           <div className={styles.col}>
             <h5>Newsletter</h5>
-            <p className={styles.newsletterText}>
-              New essays and portraits — delivered with intention.
-            </p>
             <form className={styles.miniForm} onSubmit={e => {
               e.preventDefault()
               const msg = document.createElement('div')
@@ -78,9 +75,6 @@ export default function Footer() {
         <div className={styles.dividerLine} />
         <div className={styles.bottomInner}>
           <p>© {year} Elysian Studios. All rights reserved.</p>
-          <p>
-            <a href="mailto:elysianstudios188@gmail.com">elysianstudios188@gmail.com</a>
-          </p>
         </div>
       </div>
     </footer>

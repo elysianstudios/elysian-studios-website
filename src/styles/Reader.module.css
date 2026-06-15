@@ -202,34 +202,28 @@
   margin-bottom: 1.5rem;
 }
 
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.metaItem {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--sans);
-  font-size: 0.75rem;
-  color: var(--ink-dim);
-  letter-spacing: 0.05em;
-}
-
 .heroImg {
   margin-top: 2rem;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
 }
 .heroImg img {
   width: 100%;
   aspect-ratio: 16/9;
   object-fit: cover;
+  display: block;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
 }
+.heroCaption {
+  margin-top: 0.9rem;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-muted);
+}
+.dark .heroCaption { color: #b8b3ab; }
+.sepia .heroCaption { color: #6b5840; }
 
 /* Body typography */
 .body {

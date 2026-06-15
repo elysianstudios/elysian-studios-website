@@ -40,7 +40,8 @@
   /* Transitions */
   --ease:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-out:   cubic-bezier(0.0, 0.0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* smooth exponential ease-out (no overshoot) — reads calm + premium */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
   --t-fast:  0.18s var(--ease);
   --t-mid:   0.45s var(--ease);
   --t-slow:  0.75s var(--ease);
@@ -310,4 +311,14 @@ em, i { font-style: italic; }
 }
 .toast.show {
   transform: translateX(-50%) translateY(0);
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

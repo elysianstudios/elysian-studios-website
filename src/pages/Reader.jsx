@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import DOMPurify from 'dompurify'
-import { Sun, BookOpen, Moon, Share2, Copy, ArrowLeft, ArrowRight, Clock, Calendar, Minus, Plus, Type } from 'lucide-react'
+import { Sun, BookOpen, Moon, Share2, Copy, ArrowLeft, ArrowRight, Minus, Plus, Type } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import posts from '../data/posts.json'
 import { parseContent } from '../utils/parseContent'
@@ -12,6 +12,22 @@ const MODES = [
   { key: 'sepia', icon: BookOpen, label: 'Sepia' },
   { key: 'dark',  icon: Moon,     label: 'Dark'  },
 ]
+
+// Derive the subject's name from the featured image filename
+// (e.g. ".../Dr.-Jane-Goodall-1.png" -> "Dr. Jane Goodall").
+function personFromImage(image) {
+  if (!image) return ''
+  let file = image.split('|')[0].split('/').pop().split('?')[0]
+  file = file.replace(/\.(png|jpe?g|webp|gif|svg|avif)$/i, '')
+  file = file
+    .replace(/[-_]?scaled$/i, '')
+    .replace(/[-_]\d+$/, '')        // trailing -1, _2
+    .replace(/[-_]+/g, ' ')
+    .trim()
+  // Drop filenames that clearly aren't names (no letters, or single token of digits)
+  if (!/[a-z]/i.test(file)) return ''
+  return file.replace(/\s+/g, ' ')
+}
 
 function sanitize(html) {
   return DOMPurify.sanitize(html, {
@@ -82,7 +98,7 @@ export default function Reader() {
   if (!post) return null
 
   const cleanHtml = sanitize(parseContent(post.content))
-  const formattedDate = post.date ? new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''
+  const person = personFromImage(post.image)
 
   return (
     <div className={`${styles.page} ${styles[mode]}`} data-mode={mode}>
@@ -145,23 +161,11 @@ export default function Reader() {
             <span className={`tag ${styles.catTag}`}>{post.categories[0]}</span>
           )}
           <h1 className={styles.title}>{post.title}</h1>
-          <div className={styles.meta}>
-            <span className={styles.metaItem}>
-              <Clock size={13} /> {post.readTime || 5} min read
-            </span>
-            {formattedDate && (
-              <span className={styles.metaItem}>
-                <Calendar size={13} /> {formattedDate}
-              </span>
-            )}
-            {post.author && (
-              <span className={styles.metaItem}>By {post.author}</span>
-            )}
-          </div>
           {post.image && (
-            <div className={styles.heroImg}>
-              <img src={post.image} alt={post.title} />
-            </div>
+            <figure className={styles.heroImg}>
+              <img src={post.image} alt={person || post.title} />
+              {person && <figcaption className={styles.heroCaption}>{person}</figcaption>}
+            </figure>
           )}
         </header>
 

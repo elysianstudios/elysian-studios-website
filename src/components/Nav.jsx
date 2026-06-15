@@ -115,7 +115,7 @@ export default function Nav() {
           </Link>
         </nav>
         <p className={styles.mobileTagline}>
-          "Elysian is the echo of infinity,<br />where silence speaks in symphony."
+          Extraordinary lives.<br />Preserved. Shared. Remembered.
         </p>
       </div>
     </>

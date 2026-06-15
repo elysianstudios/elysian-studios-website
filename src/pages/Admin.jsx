@@ -131,9 +131,12 @@ export default function Admin() {
 
   const savePosts = async (newPosts, msg) => {
     if (!token || !sha || !ghLoaded) {
-      setError('To publish, connect GitHub first: open "Sync with GitHub", paste your token, and Load Posts.')
-      setShowTokenPanel(true)
-      return false
+      // Local preview mode: apply to the in-memory list so the portal is
+      // fully usable for testing. Changes aren't pushed until GitHub is connected.
+      setError('')
+      setSuccess('Updated in local preview — connect GitHub to publish this change.')
+      setTimeout(() => setSuccess(''), 4500)
+      return true
     }
     setSaving(true)
     setError('')
