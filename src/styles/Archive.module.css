@@ -16,6 +16,7 @@
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 1672 / 941; /* reserve space so the banner doesn't pop in / shift layout */
 }
 
 /* ── Filter Bar ─────────────────────────────────────────────── */

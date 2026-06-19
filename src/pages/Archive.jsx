@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import { usePosts } from '../hooks/usePosts'
-import archiveBanner from '../images/archive-banner.png'
+import archiveBanner from '../images/archive-banner.jpg'
 import styles from '../styles/Archive.module.css'
 
 const PAGE_SIZE = 12
@@ -73,7 +73,7 @@ export default function Archive() {
     <div className={styles.page}>
       {/* Hero — editorial banner */}
       <div className={styles.hero}>
-        <img src={archiveBanner} alt="The Archive — biographies of great leaders. Timeless lessons. Enduring legacy." className={styles.heroImage} />
+        <img src={archiveBanner} alt="The Archive — biographies of great leaders. Timeless lessons. Enduring legacy." className={styles.heroImage} fetchpriority="high" decoding="async" width="1672" height="941" />
       </div>
 
       {/* Filters */}
