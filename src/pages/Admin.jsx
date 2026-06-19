@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock, Film, UploadCloud } from 'lucide-react'
-import { fetchPostsFile, writePostsFile, slugify } from '../utils/githubApi'
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth'
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { slugify } from '../utils/githubApi'
 import { parseContent } from '../utils/parseContent'
 import { sanitize } from '../utils/sanitizeHtml'
 import { personFromImage } from '../utils/postMeta'
-import localPosts from '../data/posts.json'
+import { auth, db, POSTS_COLLECTION } from '../lib/firebase'
+import { clearPostsCache } from '../hooks/usePosts'
 import styles from '../styles/Admin.module.css'
-
-const ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
-const LOCAL_KEY = 'elysian-local-posts' // local-preview edits cache (this browser only)
 
 // Cloudinary image hosting. Uploads from the browser use an UNSIGNED upload
 // preset, so no API key/secret is ever exposed here. Create an unsigned preset
@@ -29,11 +29,6 @@ async function uploadToCloudinary(file) {
   const data = await res.json()
   if (!res.ok) throw new Error(data.error?.message || `Upload failed (${res.status})`)
   return data.secure_url.replace('/image/upload/', '/image/upload/f_auto,q_auto/')
-}
-
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 function EmptyPost() {
@@ -136,24 +131,18 @@ function TagPicker({ options, value, onChange, placeholder }) {
 }
 
 export default function Admin() {
-  const [authed,    setAuthed]    = useState(() => sessionStorage.getItem('elysian-admin') === '1')
+  const [authed,    setAuthed]    = useState(false)
+  const [authReady, setAuthReady] = useState(false) // Firebase auth state resolved
+  const [email,     setEmail]     = useState('')
   const [password,  setPassword]  = useState('')
   const [pwError,   setPwError]   = useState('')
   const [showPw,    setShowPw]    = useState(false)
 
-  const [token,     setToken]     = useState(() => localStorage.getItem('elysian-gh-token') || sessionStorage.getItem('elysian-gh-token') || '')
-  const [showToken, setShowToken] = useState(false)
-  const [remember,  setRemember]  = useState(() => !!localStorage.getItem('elysian-gh-token'))
-  const autoLoaded = useRef(false)
-
   const [posts,     setPosts]     = useState([])
-  const [sha,       setSha]       = useState('')
-  const [ghLoaded,  setGhLoaded]  = useState(false) // true once posts+sha pulled from GitHub
   const [loading,   setLoading]   = useState(false)
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
   const [success,   setSuccess]   = useState('')
-  const [showTokenPanel, setShowTokenPanel] = useState(false)
 
   const [view,      setView]      = useState('list')
   const [editPost,  setEditPost]  = useState(null)
@@ -169,118 +158,51 @@ export default function Admin() {
   const contentImgRef    = useRef(null) // hidden file input for in-content uploads
   const featuredImgRef   = useRef(null) // hidden file input for the featured image
 
-  /* ── Seed posts on login. If a GitHub token is saved, pull LIVE data
-     automatically so the admin always shows (and edits/deletes) what's
-     actually published — deletes then stick. Otherwise fall back to any
-     local-preview edits in this browser, then the bundled file. ── */
+  /* ── Auth: track Firebase session; load posts once signed in ── */
   useEffect(() => {
-    if (!authed || ghLoaded) return
-    if (token && !autoLoaded.current) {
-      autoLoaded.current = true
-      loadPosts()
-      return
-    }
-    if (posts.length === 0) {
-      let seed = localPosts
-      try {
-        const saved = localStorage.getItem(LOCAL_KEY)
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed) && parsed.length) seed = parsed
-        }
-      } catch { /* ignore corrupt cache */ }
-      setPosts(seed)
-    }
-  }, [authed])
+    return onAuthStateChanged(auth, (user) => {
+      setAuthed(!!user)
+      setAuthReady(true)
+      if (user) loadPosts()
+      else setPosts([])
+    })
+  }, [])
 
-  /* ── Auth ──────────────────────────────────────────────────── */
   const login = async (e) => {
     e.preventDefault()
-    const hash = await sha256(password)
-    if (hash === ADMIN_HASH) {
-      sessionStorage.setItem('elysian-admin', '1')
-      setAuthed(true)
-      setPwError('')
-    } else {
-      setPwError('Incorrect password.')
+    setPwError('')
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password)
+      // onAuthStateChanged handles the rest.
+    } catch (err) {
+      const map = {
+        'auth/invalid-credential': 'Incorrect email or password.',
+        'auth/invalid-email': 'That email address looks invalid.',
+        'auth/too-many-requests': 'Too many attempts — try again shortly.',
+      }
+      setPwError(map[err.code] || 'Sign-in failed: ' + (err.code || err.message))
     }
   }
 
-  const logout = () => {
-    sessionStorage.removeItem('elysian-admin')
-    sessionStorage.removeItem('elysian-gh-token')
-    localStorage.removeItem('elysian-gh-token')
-    autoLoaded.current = false
-    setAuthed(false)
-    setToken('')
-    setPosts([])
-  }
+  const logout = () => signOut(auth)
 
-  /* ── Load / Save ───────────────────────────────────────────── */
+  /* ── Load posts from Firestore ─────────────────────────────── */
   const loadPosts = async () => {
-    if (!token) return
     setLoading(true)
     setError('')
     try {
-      const { posts: p, sha: s } = await fetchPostsFile(token)
-      setPosts(p)
-      setSha(s)
-      setGhLoaded(true)
-      setShowTokenPanel(false)
-      // Persist the token: localStorage (this device, survives restarts) when
-      // "remember" is on, else sessionStorage (cleared when the tab closes).
-      if (remember) {
-        localStorage.setItem('elysian-gh-token', token)
-        sessionStorage.removeItem('elysian-gh-token')
-      } else {
-        sessionStorage.setItem('elysian-gh-token', token)
-        localStorage.removeItem('elysian-gh-token')
-      }
-      setSuccess('Synced with GitHub — live data loaded.')
-      setTimeout(() => setSuccess(''), 4000)
+      const snap = await getDocs(collection(db, POSTS_COLLECTION))
+      const list = snap.docs.map(d => {
+        const data = d.data()
+        return { ...data, id: data.id ?? d.id }
+      })
+      list.sort((a, b) => new Date(b.date) - new Date(a.date))
+      setPosts(list)
     } catch (e) {
-      setError('Could not fetch posts: ' + e.message)
+      setError('Could not load posts: ' + e.message)
     } finally {
       setLoading(false)
     }
-  }
-
-  const savePosts = async (newPosts, msg) => {
-    // Connected: publish straight to GitHub. writePostsFile re-fetches a fresh
-    // sha and retries on conflict, so a stale/empty sha can't silently fail.
-    if (token && ghLoaded) {
-      setSaving(true)
-      setError('')
-      try {
-        const result = await writePostsFile(token, newPosts, sha, msg)
-        setSha(result.content.sha)
-        try { localStorage.removeItem(LOCAL_KEY) } catch { /* noop */ }
-        setSuccess('Published to GitHub ✓ — the live site updates in ~1–2 minutes.')
-        setTimeout(() => setSuccess(''), 5000)
-        return true
-      } catch (e) {
-        setError('Could not publish to GitHub: ' + e.message + ' (check the token has the "contents: write" scope).')
-        return false
-      } finally {
-        setSaving(false)
-      }
-    }
-
-    // Token entered but not yet synced — guide instead of silently saving local,
-    // which is what made deletes look like they "didn't work" on the live site.
-    if (token && !ghLoaded) {
-      setError('You entered a token but haven’t synced yet. Open “Sync with GitHub” → “Load Posts”, then try again.')
-      return false
-    }
-
-    // Pure local preview (no token): persist to this browser only.
-    setError('')
-    try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(newPosts))
-    } catch { /* storage full / disabled — still update in-memory below */ }
-    setSuccess('Saved in this browser — connect GitHub to publish it to the live site.')
-    setTimeout(() => setSuccess(''), 4500)
-    return true
   }
 
   /* ── Post CRUD ─────────────────────────────────────────────── */
@@ -306,33 +228,40 @@ export default function Admin() {
       slug,
       categories: editPost.categories || [],
       tags: editPost.tags || [],
+      updatedAt: new Date().toISOString().split('T')[0],
     }
-    let updated
-    if (view === 'new') {
-      updated = [post, ...posts]
-    } else {
-      updated = posts.map(p => p.id === post.id ? post : p)
-    }
-    const ok = await savePosts(updated, `${view === 'new' ? 'add' : 'update'}: ${post.title}`)
-    if (ok) {
-      setPosts(updated)
+    setSaving(true)
+    setError('')
+    try {
+      await setDoc(doc(db, POSTS_COLLECTION, String(post.id)), post)
+      clearPostsCache() // public site re-fetches fresh data
+      setPosts(view === 'new' ? [post, ...posts] : posts.map(p => p.id === post.id ? post : p))
+      setSuccess('Saved ✓ — live instantly.')
+      setTimeout(() => setSuccess(''), 3500)
       setView('list')
       setEditPost(null)
+    } catch (e) {
+      setError('Save failed: ' + e.message)
+    } finally {
+      setSaving(false)
     }
   }
 
   const confirmDelete = async () => {
     const id = deleteId
-    const updated = posts.filter(p => p.id !== id)
+    setSaving(true)
+    setError('')
     try {
-      const ok = await savePosts(updated, `remove: post #${id}`)
-      if (ok) {
-        setPosts(updated)
-        setDeleteId(null)
-      }
-      // on failure savePosts has set `error`; modal shows it and stays open
+      await deleteDoc(doc(db, POSTS_COLLECTION, String(id)))
+      clearPostsCache()
+      setPosts(posts.filter(p => p.id !== id))
+      setDeleteId(null)
+      setSuccess('Deleted ✓ — removed from the live site.')
+      setTimeout(() => setSuccess(''), 3500)
     } catch (e) {
-      setError('Delete failed: ' + (e?.message || 'unknown error'))
+      setError('Delete failed: ' + e.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -430,20 +359,34 @@ export default function Admin() {
   const totalWords = posts.reduce((sum, p) => sum + (p.content?.replace(/<[^>]+>/g, '').split(/\s+/).length || 0), 0)
 
   /* ── Login screen ──────────────────────────────────────────── */
+  if (!authReady) {
+    return <div className={styles.loginPage}><div className={styles.loginCard}><p className={styles.loginSub}>Loading…</p></div></div>
+  }
   if (!authed) {
     return (
       <div className={styles.loginPage}>
         <div className={styles.loginCard}>
           <div className={styles.loginLogo}><Lock size={24} /><span>ELYSIAN ADMIN</span></div>
-          <p className={styles.loginSub}>This area is restricted.</p>
+          <p className={styles.loginSub}>Sign in to manage the chronicles.</p>
           <form onSubmit={login} className={styles.loginForm}>
+            <div className={styles.inputWrap}>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoFocus
+                autoComplete="username"
+                className={styles.input}
+              />
+            </div>
             <div className={styles.inputWrap}>
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                autoFocus
+                autoComplete="current-password"
                 className={styles.input}
               />
               <button type="button" className={styles.eyeBtn} onClick={() => setShowPw(v => !v)}>
@@ -451,7 +394,7 @@ export default function Admin() {
               </button>
             </div>
             {pwError && <p className={styles.errorMsg}><AlertCircle size={14} /> {pwError}</p>}
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Enter</button>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Sign in</button>
           </form>
         </div>
       </div>
@@ -467,14 +410,12 @@ export default function Admin() {
           <h1 className={styles.pageTitle}>Admin Portal</h1>
           <p className={styles.pageSubtitle}>
             Elysian Studios — Chronicle Manager
-            {ghLoaded
-              ? <span className={styles.syncBadge}>● GitHub connected</span>
-              : <span className={styles.syncBadgeOff}>● Local preview</span>}
+            <span className={styles.syncBadge}>● Live database</span>
           </p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.logoutBtn} onClick={() => setShowTokenPanel(v => !v)}>
-            {ghLoaded ? 'Re-sync' : 'Sync with GitHub'}
+          <button className={styles.logoutBtn} onClick={loadPosts} disabled={loading}>
+            {loading ? 'Refreshing…' : 'Refresh'}
           </button>
           <button className={styles.logoutBtn} onClick={logout}><LogOut size={15} /> Logout</button>
         </div>
@@ -499,54 +440,6 @@ export default function Admin() {
             <Calendar size={18} />
             <div><span className={styles.statNum}>{posts[0]?.date?.split('T')[0] || '—'}</span><span className={styles.statLabel}>Latest Post</span></div>
           </div>
-        </div>
-      )}
-
-      {/* GitHub token panel (toggle) */}
-      {showTokenPanel && (
-        <div className={styles.tokenSection}>
-          <p className={styles.tokenLabel}>GitHub Personal Access Token (contents:write scope)</p>
-          <div className={styles.tokenRow}>
-            <div className={styles.inputWrap} style={{ flex: 1 }}>
-              <input
-                type={showToken ? 'text' : 'password'}
-                placeholder="ghp_xxxxxxxxxxxx"
-                value={token}
-                onChange={e => setToken(e.target.value)}
-                className={styles.input}
-              />
-              <button type="button" className={styles.eyeBtn} onClick={() => setShowToken(v => !v)}>
-                {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            <button className="btn btn-primary" onClick={loadPosts} disabled={!token || loading}>
-              {loading ? 'Loading…' : 'Load Posts'}
-            </button>
-          </div>
-          <label className={styles.tokenHint} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-            <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
-            Remember on this device (stays connected across visits, so deletes &amp; edits publish to the live site)
-          </label>
-          <p className={styles.tokenHint}>
-            <strong>To delete or edit on the live website you must connect GitHub here.</strong> Without it, changes only
-            live in this browser's preview and never reach the published site. The token needs the <code>contents:write</code> scope.
-            {remember
-              ? ' It will be saved on this device until you log out.'
-              : ' It is kept only until you close the tab.'}
-          </p>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ marginTop: '0.5rem' }}
-            onClick={() => {
-              try { localStorage.removeItem(LOCAL_KEY) } catch { /* noop */ }
-              setPosts(localPosts)
-              setSuccess('Local preview reset to the published posts.')
-              setTimeout(() => setSuccess(''), 4000)
-            }}
-          >
-            Reset local preview changes
-          </button>
         </div>
       )}
 
@@ -609,7 +502,7 @@ export default function Admin() {
                 <X size={16} /> Cancel
               </button>
               <button className="btn btn-primary" onClick={saveEdit} disabled={saving}>
-                {saving ? 'Saving…' : <><Save size={15} /> Save to GitHub</>}
+                {saving ? 'Saving…' : <><Save size={15} /> Save</>}
               </button>
             </div>
           </div>
@@ -849,9 +742,7 @@ export default function Admin() {
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h3>Delete this chronicle?</h3>
             <p>
-              {ghLoaded
-                ? 'This permanently removes the post from the published site (commits to GitHub). This cannot be undone.'
-                : 'This removes the post from your local preview. Connect GitHub to publish the deletion to the live site.'}
+              This permanently removes the post from the live site. This cannot be undone.
             </p>
             {error && <p className={styles.modalError}><AlertCircle size={14} /> {error}</p>}
             <div className={styles.modalActions}>

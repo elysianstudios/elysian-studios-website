@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import PostCard from '../components/PostCard'
-import posts from '../data/posts.json'
+import { usePosts } from '../hooks/usePosts'
 import archiveBanner from '../images/archive-banner.png'
 import styles from '../styles/Archive.module.css'
 
@@ -16,11 +16,12 @@ function getAllCategories(posts) {
 
 export default function Archive() {
   const location = useLocation()
+  const { posts, loading } = usePosts()
   const [query,    setQuery]    = useState(location.state?.search || '')
   const [category, setCategory] = useState('All')
   const [page,     setPage]     = useState(1)
 
-  const categories = useMemo(() => getAllCategories(posts), [])
+  const categories = useMemo(() => getAllCategories(posts), [posts])
 
   const filtered = useMemo(() => {
     let list = posts
@@ -36,7 +37,7 @@ export default function Archive() {
       )
     }
     return list
-  }, [query, category])
+  }, [query, category, posts])
 
   // Reset page when filters change
   useEffect(() => { setPage(1) }, [query, category])
@@ -116,7 +117,11 @@ export default function Archive() {
       {/* Results */}
       <div className={styles.body}>
         <div className="container">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className={styles.empty}>
+              <p>Loading chronicles…</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className={styles.empty}>
               <p>No chronicles found for "{query || category}".</p>
               <button className="btn btn-ghost" onClick={() => { setQuery(''); setCategory('All') }}>

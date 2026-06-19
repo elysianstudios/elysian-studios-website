@@ -4,20 +4,21 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import PostCard from '../components/PostCard'
-import posts from '../data/posts.json'
+import { usePosts } from '../hooks/usePosts'
 import styles from '../styles/Home.module.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const FALLBACK = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1400&q=80'
 
-const heroPosts    = posts.slice(0, 5)
-const carouselPosts = posts.slice(5, 13)
-const archivePosts  = posts.slice(1, 5)
-const thinkerPosts  = posts.filter(p => p.image && !p.categories?.includes('Epics')).slice(5, 9)
-
 export default function Home() {
   const location = useLocation()
+  const { posts } = usePosts()
+
+  const heroPosts     = posts.slice(0, 5)
+  const carouselPosts = posts.slice(5, 13)
+  const archivePosts  = posts.slice(1, 5)
+  const thinkerPosts  = posts.filter(p => p.image && !p.categories?.includes('Epics')).slice(5, 9)
 
   // ── Scroll-to-section on cross-page navigation ─────────────
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function Home() {
   const startHeroAuto = () => {
     clearInterval(heroAutoRef.current)
     heroAutoRef.current = setInterval(() => {
-      setActiveIdx(i => (i + 1) % heroPosts.length)
+      setActiveIdx(i => heroPosts.length ? (i + 1) % heroPosts.length : 0)
     }, 6000)
   }
 
@@ -205,7 +206,11 @@ export default function Home() {
     )
   }, [activeIdx])
 
-  const activePost = heroPosts[activeIdx]
+  const activePost = heroPosts[activeIdx] || heroPosts[0]
+
+  // Data not available (empty collection / read error) — render nothing rather
+  // than crash on activePost.title. The global loader covers the normal wait.
+  if (!activePost) return null
 
   return (
     <div className={styles.page}>

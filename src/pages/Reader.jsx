@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Sun, BookOpen, Moon, Share2, Copy, ArrowLeft, ArrowRight, Minus, Plus, Type } from 'lucide-react'
 import PostCard from '../components/PostCard'
-import posts from '../data/posts.json'
+import { usePosts } from '../hooks/usePosts'
 import { parseContent } from '../utils/parseContent'
 import { sanitize } from '../utils/sanitizeHtml'
 import { personName } from '../utils/postMeta'
@@ -17,6 +17,7 @@ const MODES = [
 export default function Reader() {
   const { slug } = useParams()
   const navigate  = useNavigate()
+  const { posts, loading } = usePosts()
   const [mode, setMode] = useState(() => localStorage.getItem('elysian-reader-mode') || 'light')
   const [fontScale, setFontScale] = useState(() => parseFloat(localStorage.getItem('elysian-reader-font')) || 1)
   const [progress, setProgress] = useState(0)
@@ -39,8 +40,8 @@ export default function Reader() {
   const related = posts.filter(p => p.slug !== slug && p.categories?.some(c => post?.categories?.includes(c))).slice(0, 3)
 
   useEffect(() => {
-    if (!post) navigate('/archive')
-  }, [post])
+    if (!loading && !post) navigate('/archive')
+  }, [post, loading])
 
   useEffect(() => {
     localStorage.setItem('elysian-reader-mode', mode)
@@ -72,7 +73,11 @@ export default function Reader() {
     }
   }
 
-  if (!post) return null
+  if (!post) {
+    return loading
+      ? <div className={`${styles.page} ${styles[mode]}`} style={{ padding: '8rem 1.5rem', textAlign: 'center', minHeight: '60vh' }}>Loading…</div>
+      : null
+  }
 
   const cleanHtml = sanitize(parseContent(post.content))
   const person = personName(post)
