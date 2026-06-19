@@ -368,7 +368,7 @@
   max-width: 45%;
 }
 .navLink:hover { color: var(--gold); }
-.navLinkRight { flex-direction: row-reverse; text-align: right; }
+.navLinkRight { text-align: right; }
 
 .navLabel {
   display: block;

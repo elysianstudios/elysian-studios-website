@@ -246,33 +246,41 @@ export default function Admin() {
   }
 
   const savePosts = async (newPosts, msg) => {
-    if (!token || !sha || !ghLoaded) {
-      // Local preview mode: persist to this browser's localStorage so the
-      // change (create / edit / delete) survives reloads. It is NOT yet on
-      // the live site — connect GitHub to publish it for everyone.
+    // Connected: publish straight to GitHub. writePostsFile re-fetches a fresh
+    // sha and retries on conflict, so a stale/empty sha can't silently fail.
+    if (token && ghLoaded) {
+      setSaving(true)
       setError('')
       try {
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(newPosts))
-      } catch { /* storage full / disabled — still update in-memory below */ }
-      setSuccess('Saved in this browser — connect GitHub to publish it to the live site.')
-      setTimeout(() => setSuccess(''), 4500)
-      return true
+        const result = await writePostsFile(token, newPosts, sha, msg)
+        setSha(result.content.sha)
+        try { localStorage.removeItem(LOCAL_KEY) } catch { /* noop */ }
+        setSuccess('Published to GitHub ✓ — the live site updates in ~1–2 minutes.')
+        setTimeout(() => setSuccess(''), 5000)
+        return true
+      } catch (e) {
+        setError('Could not publish to GitHub: ' + e.message + ' (check the token has the "contents: write" scope).')
+        return false
+      } finally {
+        setSaving(false)
+      }
     }
-    setSaving(true)
+
+    // Token entered but not yet synced — guide instead of silently saving local,
+    // which is what made deletes look like they "didn't work" on the live site.
+    if (token && !ghLoaded) {
+      setError('You entered a token but haven’t synced yet. Open “Sync with GitHub” → “Load Posts”, then try again.')
+      return false
+    }
+
+    // Pure local preview (no token): persist to this browser only.
     setError('')
     try {
-      const result = await writePostsFile(token, newPosts, sha, msg)
-      setSha(result.content.sha)
-      try { localStorage.removeItem(LOCAL_KEY) } catch { /* noop */ }
-      setSuccess('Saved successfully to GitHub!')
-      setTimeout(() => setSuccess(''), 4000)
-      return true
-    } catch (e) {
-      setError('Save failed: ' + e.message)
-      return false
-    } finally {
-      setSaving(false)
-    }
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(newPosts))
+    } catch { /* storage full / disabled — still update in-memory below */ }
+    setSuccess('Saved in this browser — connect GitHub to publish it to the live site.')
+    setTimeout(() => setSuccess(''), 4500)
+    return true
   }
 
   /* ── Post CRUD ─────────────────────────────────────────────── */
