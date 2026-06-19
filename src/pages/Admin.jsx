@@ -141,8 +141,10 @@ export default function Admin() {
   const [pwError,   setPwError]   = useState('')
   const [showPw,    setShowPw]    = useState(false)
 
-  const [token,     setToken]     = useState(() => sessionStorage.getItem('elysian-gh-token') || '')
+  const [token,     setToken]     = useState(() => localStorage.getItem('elysian-gh-token') || sessionStorage.getItem('elysian-gh-token') || '')
   const [showToken, setShowToken] = useState(false)
+  const [remember,  setRemember]  = useState(() => !!localStorage.getItem('elysian-gh-token'))
+  const autoLoaded = useRef(false)
 
   const [posts,     setPosts]     = useState([])
   const [sha,       setSha]       = useState('')
@@ -167,11 +169,18 @@ export default function Admin() {
   const contentImgRef    = useRef(null) // hidden file input for in-content uploads
   const featuredImgRef   = useRef(null) // hidden file input for the featured image
 
-  /* ── Seed posts on login. Prefer any local-preview edits saved in this
-     browser (localStorage) over the bundled file, so create/edit/delete
-     persist across reloads even without a GitHub token. ── */
+  /* ── Seed posts on login. If a GitHub token is saved, pull LIVE data
+     automatically so the admin always shows (and edits/deletes) what's
+     actually published — deletes then stick. Otherwise fall back to any
+     local-preview edits in this browser, then the bundled file. ── */
   useEffect(() => {
-    if (authed && posts.length === 0 && !ghLoaded) {
+    if (!authed || ghLoaded) return
+    if (token && !autoLoaded.current) {
+      autoLoaded.current = true
+      loadPosts()
+      return
+    }
+    if (posts.length === 0) {
       let seed = localPosts
       try {
         const saved = localStorage.getItem(LOCAL_KEY)
@@ -200,6 +209,8 @@ export default function Admin() {
   const logout = () => {
     sessionStorage.removeItem('elysian-admin')
     sessionStorage.removeItem('elysian-gh-token')
+    localStorage.removeItem('elysian-gh-token')
+    autoLoaded.current = false
     setAuthed(false)
     setToken('')
     setPosts([])
@@ -216,7 +227,15 @@ export default function Admin() {
       setSha(s)
       setGhLoaded(true)
       setShowTokenPanel(false)
-      sessionStorage.setItem('elysian-gh-token', token)
+      // Persist the token: localStorage (this device, survives restarts) when
+      // "remember" is on, else sessionStorage (cleared when the tab closes).
+      if (remember) {
+        localStorage.setItem('elysian-gh-token', token)
+        sessionStorage.removeItem('elysian-gh-token')
+      } else {
+        sessionStorage.setItem('elysian-gh-token', token)
+        localStorage.removeItem('elysian-gh-token')
+      }
       setSuccess('Synced with GitHub — live data loaded.')
       setTimeout(() => setSuccess(''), 4000)
     } catch (e) {
@@ -496,9 +515,16 @@ export default function Admin() {
               {loading ? 'Loading…' : 'Load Posts'}
             </button>
           </div>
+          <label className={styles.tokenHint} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
+            Remember on this device (stays connected across visits, so deletes &amp; edits publish to the live site)
+          </label>
           <p className={styles.tokenHint}>
-            You're viewing the bundled local posts. Connecting GitHub loads the live data and lets you publish changes.
-            Token stored in sessionStorage only — cleared when you close the tab.
+            <strong>To delete or edit on the live website you must connect GitHub here.</strong> Without it, changes only
+            live in this browser's preview and never reach the published site. The token needs the <code>contents:write</code> scope.
+            {remember
+              ? ' It will be saved on this device until you log out.'
+              : ' It is kept only until you close the tab.'}
           </p>
           <button
             type="button"

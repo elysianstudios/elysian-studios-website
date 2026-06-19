@@ -257,7 +257,7 @@ export default function Home() {
             </p>
           )}
           <div className={`${styles.heroActions} hero-actions-block`}>
-            <Link to={`/read/${activePost.slug}`} className={styles.heroCta}>
+            <Link to={`/read/${activePost.slug}`} target="_blank" rel="noopener noreferrer" className={styles.heroCta}>
               Read Chronicle <ArrowRight size={14} />
             </Link>
             <Link to="/archive" className={styles.heroCtaGhost}>
@@ -404,7 +404,7 @@ export default function Home() {
           </div>
           <div className={`${styles.thinkersGrid} gsap-stagger`}>
             {thinkerPosts.map(post => (
-              <Link key={post.id} to={`/read/${post.slug}`} className={styles.thinkerCard}>
+              <Link key={post.id} to={`/read/${post.slug}`} target="_blank" rel="noopener noreferrer" className={styles.thinkerCard}>
                 <div className={styles.thinkerImg}>
                   <img
                     src={post.image || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80`}

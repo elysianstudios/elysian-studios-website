@@ -13,6 +13,8 @@ export default function PostCard({ post, variant = 'default', style }) {
   return (
     <Link
       to={`/read/${post.slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
       className={`${styles.card} ${styles[variant]}`}
       style={style}
     >

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MessageCircle, Link2, Globe, Mail } from 'lucide-react'
@@ -92,11 +93,6 @@ export default function Team() {
                     <h3 className={styles.name}>{member.name}</h3>
                     <span className={styles.role}>{member.role}</span>
                   </div>
-                  <blockquote className={styles.quote}>
-                    <span className={styles.quoteGlyph}>"</span>
-                    {member.quote}
-                    <span className={styles.quoteGlyph}>"</span>
-                  </blockquote>
                   <p className={styles.bio}>{member.bio}</p>
                   <div className={styles.socials}>
                     {member.social?.twitter && (
@@ -136,9 +132,9 @@ export default function Team() {
             We're always looking for writers and researchers who believe
             a great life deserves a great telling.
           </p>
-          <a href="mailto:elysianstudios188@gmail.com" className="btn btn-primary">
+          <Link to="/contact" className="btn btn-primary">
             Get in Touch
-          </a>
+          </Link>
         </div>
       </section>
     </div>

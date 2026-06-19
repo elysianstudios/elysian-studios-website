@@ -64,7 +64,93 @@
   white-space: nowrap;
 }
 
+.greeting {
+  font-family: var(--serif) !important;
+  font-style: italic;
+  color: var(--ink) !important;
+  margin-bottom: 1.75rem !important;
+}
+
+.signOff {
+  font-family: var(--serif) !important;
+  font-style: italic;
+  color: var(--ink-soft) !important;
+  margin-top: 2rem;
+}
+.signName {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+/* ── Testimonials / Press ───────────────────────────────────── */
+.press {
+  background: var(--ink);
+  padding: var(--section-padding) clamp(1.5rem, 5vw, 4rem);
+}
+.pressInner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  text-align: center;
+}
+.pressTitle {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 400;
+  color: var(--ivory);
+  margin: 0.5rem 0 2.5rem;
+}
+.pressGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: left;
+}
+.testimonial {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.75rem 1.5rem;
+  transition: transform 0.4s var(--ease), border-color 0.4s var(--ease), background 0.4s var(--ease);
+}
+.testimonial:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold);
+  background: rgba(255, 255, 255, 0.06);
+}
+.quoteMark {
+  font-family: var(--serif);
+  font-size: 3rem;
+  line-height: 0.5;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+.testimonialQuote {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--bone-dark);
+  margin: 0 0 1.25rem;
+  flex: 1;
+}
+.testimonialSource {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+@media (max-width: 900px) {
+  .pressGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 600px) {
   .bgText { display: none; }
   .actions { flex-direction: column; align-items: flex-start; }
+  .pressGrid { grid-template-columns: 1fr; }
 }

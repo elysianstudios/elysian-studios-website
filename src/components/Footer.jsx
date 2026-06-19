@@ -4,7 +4,7 @@ import styles from '../styles/Footer.module.css'
 
 // Paste your deployed Google Apps Script web-app URL here (see
 // newsletter-backend.gs). Until then, signups just show the toast.
-const NEWSLETTER_ENDPOINT = ''
+const NEWSLETTER_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxwoPQCRIy7daoKYjPct6GYVCJHI2_obVqVV0C_Q5ir0rTwb3JPJaH7BLIRW91aQ-mn/exec'
 
 const InstagramIcon = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
