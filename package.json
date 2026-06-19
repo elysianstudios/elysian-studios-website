@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "import-posts": "node scripts/importPosts.js"
+    "import-posts": "node scripts/importPosts.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "dompurify": "^3.4.5",
@@ -19,6 +20,7 @@
     "react-router-dom": "^6.30.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@vitejs/plugin-react": "^4.7.0",
     "vite": "^5.4.21"
   }

@@ -5,7 +5,7 @@
 
 .hero {
   position: relative;
-  padding: calc(72px + clamp(3rem, 8vw, 6rem)) clamp(1.5rem, 5vw, 4rem) clamp(10rem, 16vw, 16rem);
+  padding: calc(72px + clamp(3rem, 8vw, 6rem)) clamp(1.5rem, 5vw, 4rem) clamp(4rem, 8vw, 7rem);
   background: var(--ivory-warm);
   overflow: hidden;
 }
@@ -44,24 +44,6 @@
   gap: 1rem;
   flex-wrap: wrap;
   margin-top: 2.5rem;
-}
-
-.bgText {
-  position: absolute;
-  left: 50%;
-  right: auto;
-  bottom: 2.5rem;
-  transform: translateX(-50%);
-  font-family: 'Huninn', var(--serif);
-  font-size: clamp(3.5rem, 11vw, 11rem);
-  font-weight: 400;
-  color: var(--bone);
-  opacity: 0.4;
-  user-select: none;
-  pointer-events: none;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  white-space: nowrap;
 }
 
 .greeting {
@@ -150,7 +132,6 @@
 }
 
 @media (max-width: 600px) {
-  .bgText { display: none; }
   .actions { flex-direction: column; align-items: flex-start; }
   .pressGrid { grid-template-columns: 1fr; }
 }

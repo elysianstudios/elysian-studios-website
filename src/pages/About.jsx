@@ -85,7 +85,6 @@ export default function About() {
             <Link to="/team" className="btn btn-ghost">Meet the Team</Link>
           </div>
         </div>
-        <div className={styles.bgText} aria-hidden="true">ELYSIAN</div>
       </section>
 
       {/* Testimonials / Press */}

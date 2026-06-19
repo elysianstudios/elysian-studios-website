@@ -14,6 +14,7 @@ export default defineConfig({
           gsap:      ['gsap'],
           lucide:    ['lucide-react'],
           dompurify: ['dompurify'],
+          firebase:  ['firebase/app', 'firebase/firestore', 'firebase/auth'],
         },
       },
     },

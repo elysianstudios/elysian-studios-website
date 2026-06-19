@@ -9,3 +9,6 @@ dist-ssr/
 .DS_Store
 scripts/.cloudinary-map.json
 image-urls.txt
+test-results/
+playwright-report/
+/playwright/.cache/
