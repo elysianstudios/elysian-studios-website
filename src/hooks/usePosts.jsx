@@ -1,28 +1,24 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, onSnapshot } from 'firebase/firestore'
 import { db, POSTS_COLLECTION } from '../lib/firebase'
 
-// Session cache so navigation doesn't re-hit Firestore.
 let cache = null
-let inflight = null
 
-export function fetchPosts(force = false) {
-  if (force) { cache = null; inflight = null }
-  if (cache) return Promise.resolve(cache)
-  if (!inflight) {
-    inflight = getDocs(collection(db, POSTS_COLLECTION))
-      .then(snap => {
-        const list = snap.docs.map(d => {
-          const data = d.data()
-          return { ...data, id: data.id ?? d.id }
-        })
-        list.sort((a, b) => new Date(b.date) - new Date(a.date)) // newest first
-        cache = list
-        return list
-      })
-      .finally(() => { inflight = null })
-  }
-  return inflight
+function snapToList(snap) {
+  const list = snap.docs.map(d => {
+    const data = d.data()
+    return { ...data, id: data.id ?? d.id }
+  })
+  list.sort((a, b) => new Date(b.date) - new Date(a.date)) // newest first
+  return list
+}
+
+// One-off fetch (used where a Promise is handy). The live data path is the
+// onSnapshot subscription in PostsProvider below.
+export async function fetchPosts() {
+  if (cache) return cache
+  cache = snapToList(await getDocs(collection(db, POSTS_COLLECTION)))
+  return cache
 }
 
 export function clearPostsCache() { cache = null }
@@ -34,25 +30,23 @@ export function PostsProvider({ children }) {
   const [loading, setLoading] = useState(!cache)
   const [error, setError]     = useState(null)
 
-  const refresh = useCallback(async () => {
-    setLoading(true)
-    try {
-      const list = await fetchPosts(true)
-      setPosts(list)
-      setError(null)
-    } catch (e) {
-      setError(e)
-    } finally {
-      setLoading(false)
-    }
+  // Live subscription: any add / edit / delete in Firestore reflects here
+  // instantly, so the site is never stale after an admin change.
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, POSTS_COLLECTION),
+      snap => { const list = snapToList(snap); cache = list; setPosts(list); setError(null); setLoading(false) },
+      err => { setError(err); setLoading(false) }
+    )
+    return unsub
   }, [])
 
-  useEffect(() => {
-    let alive = true
-    fetchPosts()
-      .then(list => { if (alive) { setPosts(list); setLoading(false) } })
-      .catch(e => { if (alive) { setError(e); setLoading(false) } })
-    return () => { alive = false }
+  const refresh = useCallback(async () => {
+    try {
+      clearPostsCache()
+      const list = await fetchPosts()
+      setPosts(list)
+    } catch (e) { setError(e) }
   }, [])
 
   return (
