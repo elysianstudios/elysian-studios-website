@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Eye, EyeOff, Plus, Edit2, Trash2, Save, X, Lock, LogOut, AlertCircle, FileText, Image as ImageIcon, Bold, Italic, List, Link as LinkIcon, Heading2, Heading3, Quote, Code, LayoutGrid, BookOpen, Calendar, Clock, Film, UploadCloud } from 'lucide-react'
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth'
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'
@@ -736,8 +737,9 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Delete modal */}
-      {deleteId && (
+      {/* Delete modal — portaled to <body> so no ancestor transform can
+          trap its fixed positioning; always centered on the viewport. */}
+      {deleteId && createPortal(
         <div className={styles.modalOverlay} onClick={() => !saving && setDeleteId(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <h3>Delete this chronicle?</h3>
@@ -752,7 +754,8 @@ export default function Admin() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

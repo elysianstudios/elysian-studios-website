@@ -6,7 +6,9 @@ export default function PageTransition({ children }) {
   useEffect(() => {
     gsap.fromTo(ref.current,
       { opacity: 0, y: 8 },
-      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+      // clearProps drops the leftover inline transform when done — otherwise it
+      // forms a containing block that breaks position:fixed (modals, bars) inside.
+      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out', clearProps: 'transform' }
     )
   }, [])
   return <div ref={ref}>{children}</div>
