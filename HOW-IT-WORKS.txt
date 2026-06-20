@@ -1,247 +1,198 @@
-================================================================
-ELYSIAN STUDIOS — HOW THE WEBSITE WORKS
-================================================================
-A plain-language guide to the whole site: what it's built with, how
-content flows, how the admin portal and "backend" work, how it deploys,
-and the gotchas to remember.
+==================================================================
+ ELYSIAN STUDIOS — HOW THE WEBSITE WORKS
+ (Full technical & operational guide — last updated for the
+  Firebase Firestore + Cloudinary architecture.)
+==================================================================
 
-----------------------------------------------------------------
-1. WHAT IT IS
-----------------------------------------------------------------
-Elysian Studios is a luxury editorial publication — "chronicles" of the
-lives of extraordinary people. It is a single-page web app (SPA): one
-HTML file loads a JavaScript bundle that renders every page in the
-browser and swaps pages without full reloads.
+------------------------------------------------------------------
+1. WHAT THIS IS
+------------------------------------------------------------------
+A fast, editorial single-page website that publishes "chronicles"
+(biographical stories) of remarkable people. It is a STATIC front
+end (just HTML/CSS/JS files) backed by two cloud services:
 
-There is NO traditional server or database. All the content lives in one
-file, src/data/posts.json, which is bundled into the app at build time.
-The only thing that acts like a "backend" is GitHub itself: the admin
-portal reads and writes that posts.json file through the GitHub API.
+  • Firebase Firestore  → the posts database (the "chronicles")
+  • Cloudinary          → image hosting & automatic optimization
 
-----------------------------------------------------------------
+There is NO traditional server to run or maintain. The built files
+can be hosted on any static host (GitHub Pages, Netlify, Vercel,
+Cloudflare Pages, or plain web hosting / GoDaddy).
+
+------------------------------------------------------------------
 2. TECH STACK
-----------------------------------------------------------------
-- React 18 ............ UI library (components)
-- Vite 5 .............. build tool + dev server
-- React Router v6 ..... client-side routing (the URL -> page mapping)
-- GSAP 3 + ScrollTrigger  animations (hero, scroll reveals)
-- CSS Modules ......... per-component scoped styles (*.module.css)
-- DOMPurify ........... sanitizes post HTML before rendering (security)
-- lucide-react ........ icon set
-- GitHub Pages + Actions  hosting + automatic deploy
+------------------------------------------------------------------
+  • React 18 + Vite 5            — UI framework + build tool
+  • React Router v6             — client-side routing
+  • Firebase (Firestore + Auth) — database + admin login
+  • Cloudinary                  — images (f_auto,q_auto delivery)
+  • GSAP                        — animations
+  • DOMPurify                   — sanitizes post HTML (XSS safety)
+  • lucide-react                — icons
+  • Google Analytics (GA4)      — traffic analytics
+  • Playwright                  — end-to-end tests
 
-----------------------------------------------------------------
-3. PROJECT LAYOUT (the important parts)
-----------------------------------------------------------------
-index.html ................. the single HTML shell (favicon, fonts, SPA
-                             redirect script for deep links)
-vite.config.js ............. build config; sets base path for GitHub Pages
-public/ .................... static files copied as-is (favicon.svg, .htaccess)
-src/
-  main.jsx ................. app entry; mounts React
-  App.jsx .................. router; lists every route/page
-  data/
-    posts.json ............. ALL posts (the content "database")
-    team.json .............. team members
-  pages/
-    Home.jsx ............... landing page (hero, carousels, thinkers…)
-    Archive.jsx ........... all chronicles + search + category filter
-    Reader.jsx ............ single chronicle reading view
-    Team.jsx, About.jsx ... static pages
-    Admin.jsx ............. the content management portal (/admin)
-  components/
-    Nav.jsx, Footer.jsx, PostCard.jsx, ScrollProgress.jsx,
-    PageTransition.jsx, ScrollToTop.jsx
-  utils/
-    githubApi.js .......... read/write posts.json via the GitHub API
-    parseContent.js ....... cleans WordPress-era HTML before display
-    sanitizeHtml.js ....... shared DOMPurify sanitizer (text + safe media)
-    postMeta.js ........... derive person name / first image from a post
-  styles/
-    globals.css ........... design tokens (colors, fonts, spacing, motion)
-    *.module.css .......... scoped styles per component/page
+------------------------------------------------------------------
+3. PROJECT STRUCTURE (the files that matter)
+------------------------------------------------------------------
+  index.html                  App shell: fonts, favicon, GA, meta
+  vite.config.js              Build config — IMPORTANT: `base` (see §9)
+  package.json                Dependencies + scripts
+  firestore.rules             Database security rules (publish these!)
 
-----------------------------------------------------------------
-4. THE DESIGN SYSTEM
-----------------------------------------------------------------
-All colors, fonts, spacing, shadows, and easing are CSS variables defined
-at the top of src/styles/globals.css (the ":root" block). Examples:
-  --ivory / --ink / --gold ... the core ivory + gold + ink palette
-  --serif / --sans .......... EB Garamond (serif) + DM Sans (sans)
-  --ease-spring ............. smooth ease-out used for "alive" motion
-Change a token once and it updates everywhere. The logo uses the "Huninn"
-Google font (loaded in index.html).
+  src/
+    main.jsx                  App entry
+    App.jsx                   Routes + global loader + PostsProvider
+    lib/firebase.js           Firebase project config (public, safe)
+    hooks/usePosts.jsx        Live posts data (Firestore onSnapshot)
+    pages/
+      Home.jsx                Hero carousel, chronicles, thinkers
+      Archive.jsx             Searchable/filterable list of all posts
+      Reader.jsx              Single chronicle reader (themes, fonts)
+      About.jsx               Mission letter + press testimonials
+      Team.jsx                Team grid
+      Contact.jsx             Contact form (mailto / Gmail)
+      Admin.jsx               Admin portal (login + create/edit/delete)
+    components/               Nav, Footer, PostCard, PageTransition…
+    utils/                    sanitizeHtml, parseContent, postMeta, slugify
+    styles/                   CSS Modules + globals.css
 
-----------------------------------------------------------------
-5. HOW A POST IS SHAPED (posts.json)
-----------------------------------------------------------------
-Each post is an object:
-  id ......... unique number
-  title ...... headline (often a quote)
-  slug ....... URL id, e.g. /read/<slug>
-  excerpt .... short summary shown on cards
-  content .... the article body as raw HTML
-  date ....... publish date (YYYY-MM-DD)
-  image ...... featured image URL
-  person ..... (optional) subject's name shown under the featured image;
-               if blank, it's auto-derived from the image filename
-  author ..... defaults to "Elysian Studios"
-  readTime ... minutes (used internally; not shown in the Reader anymore)
-  categories . array of generic tags (Biographies, Writers, Innovators,
-               Epics, Artists, Journeys, Royals, Film)
-  tags ....... array of finer keywords
+  scripts/
+    migrateToFirestore.mjs        Imported posts.json → Firestore (one-time)
+    migrateImagesToCloudinary.mjs WordPress images → Cloudinary (one-time)
+  e2e/                        Playwright tests (smoke, security, footer)
+  newsletter-backend.gs       Google Apps Script: newsletter signups + send
+  team-details-form.gs        Google Apps Script: team-details form generator
 
-----------------------------------------------------------------
-6. HOW CONTENT FLOWS TO THE PAGES
-----------------------------------------------------------------
-posts.json is imported directly into the pages. Each surface uses a slice
-or filter of the array:
+------------------------------------------------------------------
+4. HOW POSTS FLOW (the database)
+------------------------------------------------------------------
+  • Posts live in Firestore, collection "posts", one document per
+    post (document id = the post's numeric id).
+  • src/hooks/usePosts.jsx opens a LIVE subscription (onSnapshot).
+    Any add/edit/delete in the database shows on the site within a
+    second or two — no rebuild, no redeploy.
+  • App.jsx wraps everything in <PostsProvider> and shows a short
+    "Gathering the chronicles…" loader until the first data arrives,
+    so pages never render with missing data.
+  • Home/Archive/Reader read posts via usePosts(); Reader finds the
+    post by its slug; PostCard renders each card.
+  • Post HTML is run through parseContent() then DOMPurify
+    (src/utils/sanitizeHtml.js) before rendering — this blocks XSS
+    and only allows safe tags plus YouTube/Vimeo embeds.
 
-  Home.jsx
-    heroPosts     = posts 0–4        -> full-screen hero carousel
-    carouselPosts = posts 5–12       -> "Latest Chronicles" drag carousel
-    archivePosts  = posts 1–4        -> "Archive Preview" grid
-    thinkerPosts  = first 4 posts that HAVE an image and are NOT "Epics"
-                                     -> "Thinkers Spotlight" (Epics excluded)
+------------------------------------------------------------------
+5. IMAGES (Cloudinary)
+------------------------------------------------------------------
+  • All post images are served from Cloudinary (cloud name
+    "ddpq9ziwk") with /f_auto,q_auto/ so each visitor gets the best
+    format (WebP/AVIF) and quality automatically.
+  • In the admin you can UPLOAD images straight from the editor
+    (featured image + in-content). Uploads use an UNSIGNED upload
+    preset named "elysian_unsigned" — so no API key/secret is ever
+    in the website code. (Create/keep that preset in Cloudinary:
+    Settings → Upload → Upload presets, Signing Mode = Unsigned.)
+  • The migration script (scripts/migrateImagesToCloudinary.mjs) was
+    a one-time import of the old WordPress images; you won't normally
+    need it again.
 
-  Archive.jsx
-    Shows every post. Category pills come from the posts' categories;
-    the search box filters by title/excerpt/category. A category can be
-    passed in when navigating here.
+------------------------------------------------------------------
+6. THE ADMIN PORTAL  (/admin)
+------------------------------------------------------------------
+  • Log in with your Firebase Authentication email + password
+    (set up under Firebase console → Authentication → Users).
+  • Create, edit, and DELETE posts. Changes write directly to
+    Firestore and appear on the live site instantly (the realtime
+    listener pushes them out). No tokens, no rebuilds.
+  • Rich editor: headings, bold/italic, lists, quotes, links,
+    image-by-URL, image UPLOAD, and YouTube/Vimeo embeds.
+  • Meta tab: slug, author, date, read time, featured image +
+    "person/subject" caption, categories & tags (tap to select or
+    add new). Preview tab mirrors the real reader.
 
-  Reader.jsx (/read/:slug)
-    Finds the post by slug, runs content through parseContent() then
-    sanitizeHtml.sanitize(), and renders it. Shows the subject's name
-    under the featured image. Has font-size + light/sepia/dark controls.
+------------------------------------------------------------------
+7. SECURITY
+------------------------------------------------------------------
+  • Firestore rules (firestore.rules):
+      - Posts are PUBLICLY READABLE (the site needs them).
+      - Writes are allowed ONLY for the admin account, locked by its
+        Firebase UID. This matters because Firebase Email/Password
+        lets anyone self-register, so "any signed-in user" would not
+        be safe. Everything outside /posts is denied by default.
+      - * You MUST publish these in: Firebase console -> Firestore
+        Database -> Rules -> Publish. Re-publish if you ever edit them.
+  • The Firebase web config in src/lib/firebase.js is NOT secret —
+    it only identifies the project. Security comes from the rules +
+    Auth, not from hiding it.
+  • NEVER commit real secrets: the Cloudinary API secret and any
+    Firebase Admin service-account keys. The migration scripts read
+    secrets from environment variables only.
+  • Post HTML is sanitized with DOMPurify. A referrer policy is set.
+  • Recommended: use a STRONG admin password (Firebase -> Auth -> Users).
+  • Note: static hosts like GitHub Pages can't set HTTP security
+    headers (CSP/HSTS). If you need those, front the site with
+    Cloudflare or host on Netlify/Vercel.
 
-  PostCard.jsx
-    The reusable card (image, category tag, title, excerpt) used in the
-    grids and carousels.
+------------------------------------------------------------------
+8. LOCAL DEVELOPMENT
+------------------------------------------------------------------
+  Requirements: Node.js 18+ (works on 22).
 
-----------------------------------------------------------------
-7. CONTENT CLEANING + SECURITY (parseContent + sanitizeHtml)
-----------------------------------------------------------------
-Posts were imported from WordPress, so content can contain stray block
-comments and HTML entities. parseContent.js strips those and normalizes
-quotes/dashes.
+    npm install            # install dependencies
+    npm run dev            # local dev server (hot reload)
+    npm run build          # production build into dist/
+    npm run preview        # serve the production build locally
+    npm run test:e2e       # run Playwright tests (uses system Chrome)
 
-Because content is raw HTML, it is ALWAYS run through DOMPurify
-(src/utils/sanitizeHtml.js) before being inserted into the page. The
-shared sanitizer allows the normal editorial tags (headings, lists,
-images, quotes, tables) PLUS media:
-  - <video>, <audio>, <source>  (native players)
-  - <iframe> ONLY from youtube.com, youtube-nocookie.com, and
-    player.vimeo.com (any other iframe is removed). This is the
-    safelist that makes embedded videos work without opening an
-    XSS hole.
-The Reader and the admin Preview both use this same sanitizer, so what
-you preview is exactly what ships.
+------------------------------------------------------------------
+9. HOSTING / DEPLOYMENT  -- read this before you host --
+------------------------------------------------------------------
+The site is just the contents of the dist/ folder after `npm run build`.
 
-To embed a video in a post, use the editor's "Embed video" button (paste
-a YouTube/Vimeo link) or write native <video> HTML directly.
+  > THE ONE THING TO GET RIGHT: the `base` path in vite.config.js.
+      - Hosting at a DOMAIN ROOT (e.g. https://elysian.studio/ or a
+        Netlify/Vercel site)  ->  set   base: '/'
+      - Hosting in a SUBFOLDER (e.g. GitHub Pages project page at
+        /elysian-studios-website/)  ->  base: '/elysian-studios-website/'
+    Change it, then `npm run build`, then upload dist/.
 
-----------------------------------------------------------------
-8. THE ADMIN PORTAL (/admin)
-----------------------------------------------------------------
-Open <site>/admin. Two gates:
+  > SPA routing: the site uses client-side routes (/archive, /read/…).
+    The host must serve index.html for unknown paths (SPA fallback):
+      - Netlify: add a _redirects file with:  /*  /index.html  200
+      - Vercel: add a rewrite of /(.*) -> /index.html
+      - Apache (GoDaddy): a .htaccess that rewrites to index.html
+      - GitHub Pages: the included 404.html handles this.
 
-  a) PASSWORD: a SHA-256 hash check (ADMIN_HASH in Admin.jsx). This is
-     light protection only — the page is publicly reachable, so treat it
-     as a deterrent, not real security. Change ADMIN_HASH to a hash of
-     your own password.
+  > Current setup: pushing to GitHub `main` auto-builds & deploys to
+    GitHub Pages via .github/workflows/deploy.yml.
 
-  b) GITHUB (to publish): the portal works in two modes:
-     - LOCAL PREVIEW (default on login): it loads the posts bundled in
-       the app so you can browse, create, edit, delete, and preview
-       immediately. Changes live only in the browser tab — refreshing
-       discards them. The header shows "● Local preview".
-     - GITHUB CONNECTED: click "Sync with GitHub", paste a Personal
-       Access Token (PAT) with contents:write on this repo, and "Load
-       Posts". Now the live posts.json is loaded and Save/Delete commit
-       real changes to GitHub (which auto-deploys). Header shows
-       "● GitHub connected". The token is kept in sessionStorage only and
-       is cleared when the tab closes — it is never committed.
+  > After deploying, posts/images are loaded at runtime from Firestore
+    & Cloudinary, so the same build works on any host without rebuilding
+    (as long as the base path matches).
 
-  Editing a post: three tabs —
-     Content : title, excerpt, and a rich-text toolbar (headings, bold,
-               italic, lists, quote, code, link, image, embed video).
-               The body is plain HTML you can also hand-edit.
-     Meta    : slug, author, date, read time, featured image URL,
-               Person/subject (shown under the image), and chip pickers
-               for Categories and Tags — tap existing ones or type a new
-               one and press Enter/Add.
-     Preview : renders exactly like the public Reader (including video
-               embeds and the person caption).
+------------------------------------------------------------------
+10. NEWSLETTER & FORMS (Google Apps Script)
+------------------------------------------------------------------
+  • newsletter-backend.gs is deployed as a Google Apps Script web app.
+    The footer signup form POSTs emails to it; it stores them in a
+    Google Sheet and can send newsletters (sendNewsletter()). The
+    web-app URL is set as NEWSLETTER_ENDPOINT in src/components/Footer.jsx.
+  • team-details-form.gs generates a Google Form to collect team info.
 
-  Save / Delete: in local preview they update the in-browser list (with a
-  note that they aren't published). When GitHub-connected they commit to
-  posts.json on main.
+------------------------------------------------------------------
+11. ANALYTICS
+------------------------------------------------------------------
+  Google Analytics (GA4, id G-XNC67Q5YL7) is loaded in index.html and
+  tracks page views automatically. View stats at analytics.google.com.
 
-----------------------------------------------------------------
-9. THE "BACKEND": GITHUB CONTENTS API (githubApi.js)
-----------------------------------------------------------------
-There is no server. src/utils/githubApi.js talks to the GitHub REST API:
-  - fetchPostsFile(token): GET the file, base64-decode it as UTF-8, parse
-    JSON, and return { posts, sha }. The "sha" identifies the exact file
-    version and is required to write.
-  - writePostsFile(token, posts, sha, message): JSON-encode, base64-encode
-    as UTF-8, and PUT the file back as a commit.
-
-Reliability built in:
-  - UTF-8 ENCODING: base64 is encoded/decoded as UTF-8 (encodeBase64Utf8 /
-    decodeBase64Utf8). Do NOT replace these with bare btoa()/atob() — that
-    corrupts accented characters, em dashes, and curly quotes (this bug
-    once garbled 88 of 89 posts).
-  - STALE-SHA RETRY: if a save fails because the file changed since it was
-    loaded (HTTP 409/422 — e.g. another admin save happened), the code
-    re-fetches the latest sha and retries the write once automatically.
-  - SAFETY GUARD: it refuses to write if the posts array is empty, so a
-    glitch can't wipe the file.
-
-----------------------------------------------------------------
-10. HOW IT DEPLOYS (GitHub Pages + Actions)
-----------------------------------------------------------------
-- Hosting: GitHub Pages, served at a sub-path:
-  https://elysianstudios.github.io/elysian-studios-website/
-- Because of that sub-path, vite.config.js sets base:
-  '/elysian-studios-website/', and App.jsx passes that as the router
-  basename. public/404.html + a snippet in index.html let deep links
-  (e.g. /read/xyz) survive a hard refresh.
-- Auto-deploy: .github/workflows/deploy.yml runs on every push to main —
-  it builds the app and publishes the dist/ output to Pages. No manual
-  upload. A push is usually live in ~1–3 minutes.
-- (A GoDaddy/Apache static-hosting path also exists as an alternative:
-  run "npm run build" and upload dist/.)
-
-----------------------------------------------------------------
-11. EVERYDAY COMMANDS
-----------------------------------------------------------------
-  npm install        install dependencies (first time)
-  npm run dev        local dev server (note the /elysian-studios-website/
-                     path in the URL; admin is at .../admin)
-  npm run build      production build into dist/
-  npm run preview    preview the production build locally
-
-----------------------------------------------------------------
-12. GOTCHAS (read before editing)
-----------------------------------------------------------------
-- AFTER USING THE LIVE ADMIN, PULL FIRST. Admin saves commit straight to
-  GitHub's main branch, so your local clone falls behind. Run
-  "git pull origin main" before doing more code work, or pushes will be
-  rejected / conflict.
-- DON'T regress the UTF-8 base64 helpers (see section 9).
-- The /admin password is a placeholder-grade deterrent; the route is
-  public. Change ADMIN_HASH and don't store anything sensitive there.
-- lucide-react has no brand icons in this version; use generic ones
-  (e.g. Film for the video button, not a YouTube logo).
-
-----------------------------------------------------------------
-13. KNOWN OPTIMIZATION (future work)
-----------------------------------------------------------------
-posts.json (~600 KB of HTML) is bundled into the main JavaScript file, so
-the initial download is larger than ideal (the build prints a
-"chunk larger than 500 kB" warning). A future optimization is to load
-posts as a separate fetched JSON asset (or split per-post and lazy-load
-the Reader's content) so the first paint ships less data. It's left as-is
-for now because it's an architecture change, not a bug.
-================================================================
+------------------------------------------------------------------
+12. ROUTINE TASKS / GOTCHAS
+------------------------------------------------------------------
+  • Add / edit / delete posts -> use /admin (instant, no deploy).
+  • Change the look/code -> edit src/, commit, redeploy (build).
+  • If posts ever stop loading -> check Firestore rules are published
+    and that the Firebase project/config in src/lib/firebase.js match.
+  • If admin can't save -> confirm you're signed in and the rules allow
+    your UID; check firestore.rules are published.
+  • Keep the Cloudinary unsigned preset "elysian_unsigned" in place or
+    admin image uploads will fail.
+==================================================================
