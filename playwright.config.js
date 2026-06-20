@@ -10,6 +10,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 30000,
   fullyParallel: false,
+  workers: 1, // shared preview server + live Firestore data — run serially
   reporter: [['list']],
   use: {
     baseURL: BASE,

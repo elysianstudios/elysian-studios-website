@@ -17,6 +17,19 @@
   width: 100%;
   height: auto;
   aspect-ratio: 1672 / 941; /* reserve space so the banner doesn't pop in / shift layout */
+  transform-origin: center;
+  animation: bannerDrift 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Subtle, slow ken-burns drift — premium without being distracting. */
+@keyframes bannerDrift {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroImage { animation: none; }
 }
 
 /* ── Filter Bar ─────────────────────────────────────────────── */

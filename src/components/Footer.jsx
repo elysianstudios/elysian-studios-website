@@ -55,7 +55,7 @@ export default function Footer() {
             <ul>
               <li><Link to="/archive">Chronicles</Link></li>
               <li><Link to="/archive">Archive</Link></li>
-              <li><Link to="/#thinkers">Thinkers</Link></li>
+              <li><Link to="/" state={{ scrollTo: 'thinkers' }}>Thinkers</Link></li>
               <li><Link to="/team">Our Team</Link></li>
             </ul>
           </div>
@@ -72,21 +72,28 @@ export default function Footer() {
             <h5>Newsletter</h5>
             <form className={styles.miniForm} onSubmit={e => {
               e.preventDefault()
-              const email = e.target.querySelector('input[type="email"]').value.trim()
-              if (NEWSLETTER_ENDPOINT && email) {
-                // Fire-and-forget POST; no-cors so the static page isn't blocked.
+              const input = e.target.querySelector('input[type="email"]')
+              const email = input.value.trim()
+              if (!email) return
+              const toast = (text) => {
+                const msg = document.createElement('div')
+                msg.className = 'toast show'
+                msg.textContent = text
+                document.body.appendChild(msg)
+                setTimeout(() => msg.remove(), 4000)
+              }
+              if (NEWSLETTER_ENDPOINT) {
+                // Apps Script needs a "simple" request (no custom Content-Type)
+                // so no-cors doesn't strip the body. Fire-and-forget: the write
+                // runs even though the response is opaque.
                 fetch(NEWSLETTER_ENDPOINT, {
                   method: 'POST',
                   mode: 'no-cors',
-                  headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ email, source: 'footer' }),
                 }).catch(() => {})
               }
-              const msg = document.createElement('div')
-              msg.className = 'toast show'
-              msg.textContent = 'Welcome to Elysian. ✦'
-              document.body.appendChild(msg)
-              setTimeout(() => msg.remove(), 4000)
+              // Confirm immediately (the response is opaque, and the write fires regardless).
+              toast('You’re subscribed. Welcome to Elysian. ✦')
               e.target.reset()
             }}>
               <div className={styles.inputWrap}>

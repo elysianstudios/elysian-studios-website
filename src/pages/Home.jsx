@@ -21,15 +21,18 @@ export default function Home() {
   const thinkerPosts  = posts.filter(p => p.image && !p.categories?.includes('Epics')).slice(5, 9)
 
   // ── Scroll-to-section on cross-page navigation ─────────────
+  // Retry a few times: when arriving from another page the target section may
+  // not be in the DOM yet (posts still loading / ScrollToTop firing first).
   useEffect(() => {
     const section = location.state?.scrollTo
-    if (section) {
-      const attempt = () => {
-        const el = document.getElementById(section)
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      }
-      setTimeout(attempt, 100)
-    }
+    if (!section) return
+    let tries = 0
+    const id = setInterval(() => {
+      const el = document.getElementById(section)
+      if (el) { el.scrollIntoView({ behavior: 'smooth' }); clearInterval(id) }
+      else if (++tries > 20) clearInterval(id) // give up after ~3s
+    }, 150)
+    return () => clearInterval(id)
   }, [location.state])
 
   // ── Hero Carousel state ────────────────────────────────────
