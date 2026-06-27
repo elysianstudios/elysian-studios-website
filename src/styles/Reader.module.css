@@ -240,21 +240,25 @@
   margin-bottom: 1.5em;
 }
 
-/* Lists: restore markers (globals.css resets them) and make ALL list text —
-   including spans with WordPress inline font-sizes — inherit the scaled body
-   size so it matches the prose and responds to the +/- control. */
+/* Lists: restore markers (globals.css resets them) and force ALL list elements
+   to inherit the scaled body size. The !important beats WordPress inline
+   font-sizes that sat on <li>/<p>/<span>, which is why list text + bullet/number
+   markers previously ignored the +/- control. (::marker follows the li size.) */
 .body :global(ul),
 .body :global(ol) {
-  font-size: 1em;
+  font-size: 1em !important;
   padding-left: 1.5em;
   margin: 0 0 1.5em;
 }
 .body :global(ul) { list-style: disc; }
 .body :global(ol) { list-style: decimal; }
 .body :global(li) { margin-bottom: 0.6em; }
+.body :global(li),
+.body :global(li p),
 .body :global(li span),
 .body :global(li strong),
-.body :global(li em) { font-size: 1em !important; }
+.body :global(li em),
+.body :global(li a) { font-size: 1em !important; }
 
 /* Drop cap on first paragraph */
 .body :global(p:first-of-type::first-letter) {

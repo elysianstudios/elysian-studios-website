@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import PostCard from '../components/PostCard'
 import { usePosts } from '../hooks/usePosts'
+import { personName } from '../utils/postMeta'
 import archiveBanner from '../images/archive-banner.jpg'
 import styles from '../styles/Archive.module.css'
 
@@ -32,6 +33,7 @@ export default function Archive() {
       const q = query.toLowerCase()
       list = list.filter(p =>
         p.title.toLowerCase().includes(q) ||
+        personName(p).toLowerCase().includes(q) ||
         p.excerpt?.toLowerCase().includes(q) ||
         p.categories?.some(c => c.toLowerCase().includes(q))
       )
