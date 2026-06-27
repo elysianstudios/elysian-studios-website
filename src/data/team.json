@@ -3,35 +3,35 @@
     "id": 1,
     "name": "Arvind Ghorwal",
     "role": "Founder",
-    "image": "",
+    "image": "https://res.cloudinary.com/ddpq9ziwk/image/upload/f_auto,q_auto/v1782550951/elysian/team/arvind.jpg",
     "linkedin": "https://in.linkedin.com/in/arvindghorwal"
   },
   {
     "id": 2,
     "name": "Shaurya Gupta",
     "role": "Co-Founder",
-    "image": "",
+    "image": "https://res.cloudinary.com/ddpq9ziwk/image/upload/f_auto,q_auto/v1782550954/elysian/team/shaurya.png",
     "linkedin": "https://www.linkedin.com/in/shauryaguptaiitb/"
   },
   {
     "id": 3,
     "name": "Aastha Dhir",
     "role": "Co-Founder",
-    "image": "",
+    "image": "https://res.cloudinary.com/ddpq9ziwk/image/upload/f_auto,q_auto/v1782550956/elysian/team/aastha.jpg",
     "linkedin": "https://www.linkedin.com/in/aastha-dhir-604243228"
   },
   {
     "id": 4,
     "name": "Balaji Sutar",
     "role": "Content Creator",
-    "image": "",
+    "image": "https://res.cloudinary.com/ddpq9ziwk/image/upload/f_auto,q_auto/v1782550958/elysian/team/balaji.jpg",
     "linkedin": "https://www.linkedin.com/in/balaji-sutar-1727441b/"
   },
   {
     "id": 5,
     "name": "Santosh Panigrahi",
     "role": "Content Creator",
-    "image": "",
+    "image": "https://res.cloudinary.com/ddpq9ziwk/image/upload/f_auto,q_auto/v1782550960/elysian/team/santosh.png",
     "linkedin": "https://www.linkedin.com/in/santoshp26/"
   }
 ]
