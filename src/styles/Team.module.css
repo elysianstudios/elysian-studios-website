@@ -146,6 +146,34 @@
   pointer-events: none;
 }
 
+/* Monogram avatar used when a member has no photo */
+.monogram {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--gold);
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.linkedinLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+  transition: color var(--t-fast);
+}
+.linkedinLink:hover { color: var(--gold); }
+
 .cardBody {
   padding: 1.75rem 1.75rem 1.5rem;
 }

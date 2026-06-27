@@ -12,6 +12,17 @@
   overflow: hidden;
 }
 
+/* Card entrance — CSS-only so a re-render (e.g. clearing the search) can't
+   leave cards stuck invisible the way the old JS reveal did. */
+.cardReveal { animation: cardIn 0.5s ease both; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cardReveal { animation: none; }
+}
+
 .heroImage {
   display: block;
   width: 100%;

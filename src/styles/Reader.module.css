@@ -228,7 +228,8 @@
 /* Body typography */
 .body {
   font-family: var(--serif);
-  font-size: calc(1.125rem * var(--font-scale, 1));
+  /* Match the About page's body size, and still scale with the +/- control. */
+  font-size: calc(clamp(1.1rem, 1.8vw, 1.35rem) * var(--font-scale, 1));
 }
 
 .body :global(p),
@@ -238,6 +239,22 @@
   color: var(--ink-soft);
   margin-bottom: 1.5em;
 }
+
+/* Lists: restore markers (globals.css resets them) and make ALL list text —
+   including spans with WordPress inline font-sizes — inherit the scaled body
+   size so it matches the prose and responds to the +/- control. */
+.body :global(ul),
+.body :global(ol) {
+  font-size: 1em;
+  padding-left: 1.5em;
+  margin: 0 0 1.5em;
+}
+.body :global(ul) { list-style: disc; }
+.body :global(ol) { list-style: decimal; }
+.body :global(li) { margin-bottom: 0.6em; }
+.body :global(li span),
+.body :global(li strong),
+.body :global(li em) { font-size: 1em !important; }
 
 /* Drop cap on first paragraph */
 .body :global(p:first-of-type::first-letter) {

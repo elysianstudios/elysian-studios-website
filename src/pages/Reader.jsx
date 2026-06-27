@@ -43,6 +43,20 @@ export default function Reader() {
     if (!loading && !post) navigate('/archive')
   }, [post, loading])
 
+  // Per-post document title + meta description — better for SEO & link sharing.
+  useEffect(() => {
+    if (!post) return
+    const prevTitle = document.title
+    document.title = `${post.title} — Elysian Studios`
+    const meta = document.querySelector('meta[name="description"]')
+    const prevDesc = meta?.getAttribute('content')
+    if (meta && post.excerpt) meta.setAttribute('content', post.excerpt.slice(0, 155))
+    return () => {
+      document.title = prevTitle
+      if (meta && prevDesc != null) meta.setAttribute('content', prevDesc)
+    }
+  }, [post])
+
   useEffect(() => {
     localStorage.setItem('elysian-reader-mode', mode)
     document.documentElement.setAttribute('data-reader-mode', mode)

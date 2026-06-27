@@ -2,7 +2,16 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { MessageCircle, Link2, Globe, Mail } from 'lucide-react'
+
+const LinkedInIcon = (props) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect x="2" y="9" width="4" height="12" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+)
+
+const initials = (name) => name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
 import team from '../data/team.json'
 import teamIllustration from '../images/team-illustration.png'
 import styles from '../styles/Team.module.css'
@@ -61,7 +70,7 @@ export default function Team() {
             </div>
             <div className={styles.missionDivider} />
             <div className={styles.missionStat}>
-              <span className={styles.statNum}>6</span>
+              <span className={styles.statNum}>5</span>
               <span className={styles.statLabel}>Editorial Voices</span>
             </div>
             <div className={styles.missionDivider} />
@@ -80,12 +89,11 @@ export default function Team() {
             {team.map(member => (
               <article key={member.id} className={`${styles.card} team-card`}>
                 <div className={styles.cardImgWrap}>
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className={styles.cardImg}
-                    onError={e => { e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80' }}
-                  />
+                  {member.image ? (
+                    <img src={member.image} alt={member.name} className={styles.cardImg} />
+                  ) : (
+                    <div className={styles.monogram} aria-hidden="true">{initials(member.name)}</div>
+                  )}
                   <div className={styles.cardImgOverlay} />
                 </div>
                 <div className={styles.cardBody}>
@@ -93,29 +101,16 @@ export default function Team() {
                     <h3 className={styles.name}>{member.name}</h3>
                     <span className={styles.role}>{member.role}</span>
                   </div>
-                  <p className={styles.bio}>{member.bio}</p>
-                  <div className={styles.socials}>
-                    {member.social?.twitter && (
-                      <a href={member.social.twitter} target="_blank" rel="noopener" aria-label="Twitter / X">
-                        <MessageCircle size={15} />
-                      </a>
-                    )}
-                    {member.social?.linkedin && (
-                      <a href={member.social.linkedin} target="_blank" rel="noopener" aria-label="LinkedIn">
-                        <Link2 size={15} />
-                      </a>
-                    )}
-                    {member.social?.website && (
-                      <a href={member.social.website} target="_blank" rel="noopener" aria-label="Website">
-                        <Globe size={15} />
-                      </a>
-                    )}
-                    {member.social?.email && (
-                      <a href={`mailto:${member.social.email}`} aria-label="Email">
-                        <Mail size={15} />
-                      </a>
-                    )}
-                  </div>
+                  {member.linkedin && (
+                    <a
+                      href={member.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.linkedinLink}
+                    >
+                      <LinkedInIcon /> LinkedIn
+                    </a>
+                  )}
                 </div>
               </article>
             ))}

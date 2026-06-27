@@ -7,7 +7,7 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1516979187457-637abb4f935
 
 export default function PostCard({ post, variant = 'default', style }) {
   const image = post.image || PLACEHOLDER
-  const primaryCat = post.categories?.[0] || 'Elysian'
+  const primaryCat = post.categories?.[0] || 'Chronicle'
   const person = personName(post)
 
   return (
